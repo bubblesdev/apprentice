@@ -1,0 +1,6 @@
+# 0007: Unconfirmed Meta formats are isolated and probed; outbound fetches are guarded
+
+Date: 2026-10-26. Status: accepted.
+Context: Muse Image, Voice Transcribe and Muse Wonder adapters were written without a key and without access to Meta's API reference (blocked by this environment's network policy). Only Muse Spark and SAM 3.1 formats were confirmed by the day-1 spikes. Separately, ingest now fetches user-supplied links (direct videos, help pages, PDFs) from the server.
+Decision: each unconfirmed format sits behind one small function (`extractImages`, `MetaClient.transcribe`, `WonderAuditor`'s JSON schema) that accepts every plausible OpenAI-compatible shape, and `pnpm --filter @apprentice/meta probe -- --yes-spend` calls each model once (about $0.02), saves the raw responses and reports whether the parsers understand them. Fakes never imitate these models: they return labelled placeholders (a "Muse Image not called" SVG, an empty transcript, a rules-based audit marked `source: "rules"`). All server-side fetches of user links go through `safeFetch`, which refuses hosts resolving to private, loopback, link-local or CGNAT addresses and re-checks every redirect.
+Consequences: one cheap probe run before the demo confirms or pinpoints any mismatch; no fake output can be mistaken for a model's; the server cannot be used to reach its own network.

@@ -31,6 +31,8 @@ export const ApiEnv = MetaEnv.merge(MediaEnv).extend({
   UPLOAD_MAX_MB: z.coerce.number().positive().default(300),
   /** Postgres for guides, sessions, artifacts and pg-boss jobs; without it everything is in memory. */
   DATABASE_URL: z.string().min(1).optional(),
+  /** inline: this process builds guides (one-machine deploys); queue: pg-boss for apps/worker. */
+  BUILD_JOBS: z.enum(["inline", "queue"]).optional(),
   /** Build the recorded PS1 guide at start-up in fake mode, so the web app has something to coach. */
   SEED_FIXTURE_GUIDE: z
     .enum(["true", "false"])
@@ -54,7 +56,7 @@ export async function createRuntime(env: ApiEnv, options: RuntimeOptions = {}) {
   const clock = options.clock ?? systemClock;
   const newId = options.newId ?? randomUUID;
   const persistence = env.DATABASE_URL
-    ? await postgresPersistence(env.DATABASE_URL, [BUILD_GUIDE_JOB])
+    ? await postgresPersistence(env.DATABASE_URL, [BUILD_GUIDE_JOB], env.BUILD_JOBS === "inline")
     : memoryPersistence();
   const { guides, sessions } = persistence;
   const meter = (scope: UsageScope, capUsd: number) =>

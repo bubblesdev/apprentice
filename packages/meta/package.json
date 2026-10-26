@@ -19,7 +19,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "probe": "node dist/probe.js"
   },
   "dependencies": {
     "@apprentice/core": "workspace:*",

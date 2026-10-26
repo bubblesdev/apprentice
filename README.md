@@ -10,29 +10,33 @@ Hands-on know-how lives in a few experts' heads: servicing equipment, assembly, 
 
 ## How it works (Meta models)
 
-1. **Capture.** Muse Spark watches the expert's video with its audio and splits the job into steps, parts, tools, checks and warnings. Muse Voice Transcribe captures the narration.
-2. **Ground.** SAM 3.1 tracks every part and tool through the video, so each step carries the exact frames and highlighted objects that show what "correct" looks like.
-3. **Explain.** Muse Image draws a clean diagram for each step from the real frames.
-4. **Coach live.** The trainee points a phone at their work. Apprentice compares what it sees with the expert's step, says the next instruction, and stops them on a skipped or wrong step.
-5. **Prove.** A run report marks every step passed or failed, with frames as evidence. Repeated mistakes improve the guide once the expert approves.
+1. **Read any instructions.** Upload a video, paste a direct video link, or add a PDF, help page or Markdown doc. **Muse Spark** watches the video with its audio (or reads the text) and splits the job into ordered steps with parts, tools, a "done when" check and warnings, then looks at dense frames around each step's end to find exactly when it is finished.
+2. **Ground it.** **SAM 3.1** finds each part in the expert's finished frames, so every step carries the frame and the highlighted part that show what correct looks like.
+3. **Explain and make it safe.** **Muse Image** draws a clean, labelled diagram per step. **Muse Wonder** reviews the whole guide for hazards; steps marked stop must be acknowledged before the coach starts them.
+4. **Coach live.** The trainee points a phone at their work and says "I'm done". Muse Spark compares their frames with the expert's, SAM 3.1 checks the parts are in view, and a deterministic policy advances only on two agreeing confident checks. Otherwise it asks to see closer, sends them back with evidence, or stops them. They can ask a question by voice (**Muse Voice Transcribe**) and get a short answer from Muse Spark.
+5. **Prove and improve.** A run report shows every step with its evidence frames and **Muse Wonder**'s review. Steps that many trainees struggle with are flagged for the guide's author, who can edit and re-approve the guide.
+
+Every Meta call is hashed and cached (paid once), metered and capped per guide and per session. Without a key, fakes replay the recorded day-1 outputs or return clearly labelled placeholders.
 
 ## Repository
 
-| Path                | What it is                                                                                                               |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `packages/core`     | Domain model and zod schemas (Guide, Step, Session, Verdict) and the ports the domain depends on                         |
-| `packages/meta`     | Muse Spark and SAM 3.1 adapters, request-hash cache, retries, cost meter, fixture-backed fakes                           |
-| `packages/coach`    | Live coach: verify-then-advance state machine, policy, step verifier, run report                                         |
-| `packages/pipeline` | Instructions to guide: step draft, boundary refinement, reference frames, part grounding as idempotent, versioned stages |
-| `packages/eval`     | Accuracy and cost harness: per-verdict precision and recall, coach gate metrics, cost per guide and coaching minute      |
-| `packages/store`    | Postgres repositories and the pg-boss job queue                                                                          |
-| `apps/api`          | Hono HTTP + WebSocket API for guides and live coaching sessions                                                          |
-| `apps/worker`       | pg-boss worker that builds guides                                                                                        |
-| `apps/web`          | React + Vite PWA: home, building, guide, live coach, report                                                              |
-| `docs/`             | Architecture, decisions, plan and project context                                                                        |
-| `spike/`            | Day-1 feasibility experiments (Python) and their results                                                                 |
+| Path                | What it is                                                                                                                 |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `packages/core`     | Domain model, zod schemas, the API wire contract and the ports the domain depends on                                       |
+| `packages/meta`     | Muse Spark, SAM 3.1, Muse Image, Voice Transcribe and Muse Wonder adapters; request-hash cache, retries, cost meter, fakes |
+| `packages/coach`    | Live coach: verify-then-advance state machine, policy, step verifier, run report, guide insights                           |
+| `packages/pipeline` | Instructions to guide: ingest, step draft, boundary refinement, reference frames, grounding, diagrams, safety review       |
+| `packages/eval`     | Accuracy and cost harness: per-verdict precision and recall, coach gate metrics, cost per guide and coaching minute        |
+| `packages/store`    | Postgres repositories, pg-boss queue, file and R2 media stores                                                             |
+| `packages/ui`       | Design tokens shared by web and future native shells                                                                       |
+| `apps/api`          | Hono HTTP + WebSocket API for guides and live coaching sessions                                                            |
+| `apps/worker`       | pg-boss worker that builds guides                                                                                          |
+| `apps/web`          | React + Vite PWA: home, building, guide (with editor), live coach, report                                                  |
+| `e2e/`              | Playwright specs that drive the built app against the API on fake adapters                                                 |
+| `docs/`             | Architecture, decisions, deploy, eval baseline, plan and project context                                                   |
+| `spike/`            | Day-1 feasibility experiments (Python) and their results                                                                   |
 
-Development: `pnpm install`, then `pnpm check` (lint, typecheck, tests). Set `TEST_DATABASE_URL` to also run the Postgres integration tests. Run the product with no key and no database: `pnpm build`, then `APPRENTICE_FAKE_JUDGE=pass pnpm --filter @apprentice/api start` and `pnpm --filter @apprentice/web dev`, and open http://localhost:5173 (fake Meta adapters, recorded PS1 guide).
+Development: `pnpm install`, then `pnpm check` (lint, typecheck, tests). Set `TEST_DATABASE_URL` to also run the Postgres integration tests; `pnpm e2e` drives the built app in Chromium. Run the product with no key and no database: `pnpm build`, then `APPRENTICE_FAKE_JUDGE=pass pnpm --filter @apprentice/api start` and `pnpm --filter @apprentice/web dev`, and open http://localhost:5173 (fake Meta adapters, recorded PS1 guide).
 
 ## Built during the hackathon (log)
 
@@ -50,6 +54,7 @@ Development: `pnpm install`, then `pnpm check` (lint, typecheck, tests). Set `TE
 - **26 Oct 2026:** voice questions: the coach's mic opens Ask about this step (tap to talk or type); the browser records and encodes 16 kHz mono WAV, Muse Voice Transcribe turns it into text, Muse Spark answers in two short sentences while looking at the trainee's latest frame; transcripts cached and metered per second.
 - **26 Oct 2026:** Muse Wonder: a safety review stage reads the whole guide and sets each step's level and note (the more severe of draft and review wins; a stop step needs acknowledging in the coach), and an audit of every finished run (summary, steps worth a second look, wording suggestions for the author) shown on the report. A labelled rule-based fallback stands in without credits.
 - **26 Oct 2026:** durable media (file store on a shared volume, Cloudflare R2 via signed S3 requests; keys checked so nothing escapes its folder) and guide insights: across runs of the current version, steps where trainees needed another try are flagged on the Guide screen for the author.
+- **26 Oct 2026:** Playwright end-to-end specs (add instructions, build, edit and approve, a full coached run, a question, an early end), one-machine deploy (Dockerfile, fly.toml, Cloudflare Pages fallback, `docs/DEPLOY.md`), and an opt-in probe that confirms the unverified Meta formats for about $0.02 (ADR 0007).
 
 ## Running the spike
 
