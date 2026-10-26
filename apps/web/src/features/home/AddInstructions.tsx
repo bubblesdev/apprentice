@@ -4,6 +4,7 @@ import { Button } from "../../components/Button";
 import { Icon } from "../../components/Icon";
 import { Sheet } from "../../components/Sheet";
 import { api } from "../../lib/api";
+import { cx } from "../../lib/cx";
 import { utf8Base64, videoDuration } from "../../lib/device";
 import styles from "./Home.module.css";
 
@@ -180,30 +181,72 @@ function LinkForm() {
   );
 }
 
+type ManualMode = "paste" | "file" | "link";
+
+const MODES: { mode: ManualMode; label: string }[] = [
+  { mode: "paste", label: "Paste" },
+  { mode: "file", label: "File" },
+  { mode: "link", label: "Web page" },
+];
+
 function ManualForm({
   initialText,
-  initialName,
+  initialFile,
 }: {
   initialText?: string | undefined;
-  initialName?: string | undefined;
+  initialFile?: File | undefined;
 }) {
+  const [mode, setMode] = useState<ManualMode>(initialFile ? "file" : "paste");
   const [text, setText] = useState(initialText ?? "");
-  const [name, setName] = useState(initialName ?? "");
-  const [title, setTitle] = useState(initialName ? titleFromFile(initialName) : "");
+  const [file, setFile] = useState<File | undefined>(initialFile);
+  const [url, setUrl] = useState("");
+  const [title, setTitle] = useState(initialFile ? titleFromFile(initialFile.name) : "");
   const { busy, error, run } = useCreate();
+  const isPdf = file?.type === "application/pdf" || /\.pdf$/i.test(file?.name ?? "");
   const trimmed = text.trim();
   const tooLong = trimmed.length > MAX_DOCUMENT_CHARS;
+  const linkValid = /^https?:\/\/\S+$/i.test(url.trim());
+  const ready =
+    mode === "paste"
+      ? Boolean(trimmed) && !tooLong
+      : mode === "file"
+        ? Boolean(file) && (isPdf || (Boolean(trimmed) && !tooLong))
+        : linkValid;
+
+  const chooseFile = async (f: File | undefined) => {
+    setFile(f);
+    if (!f) return;
+    if (!title) setTitle(titleFromFile(f.name));
+    if (!(f.type === "application/pdf" || /\.pdf$/i.test(f.name))) setText(await f.text());
+  };
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    if (!trimmed || tooLong) return;
+    if (!ready) return;
     void run(async () => {
+      const name = title.trim() || (mode === "link" ? "Help page" : "Written instructions");
+      if (mode === "link") {
+        const link = url.trim();
+        return (
+          await api.createGuide({
+            source: { kind: "document", title: name, location: link },
+            media: { kind: "url", url: link },
+          })
+        ).guideId;
+      }
+      if (mode === "file" && file && isPdf) {
+        const { media } = await api.upload(
+          new File([file], file.name, { type: "application/pdf" }),
+        );
+        return (
+          await api.createGuide({
+            source: { kind: "document", title: name, location: media.url },
+            media,
+          })
+        ).guideId;
+      }
       const { guideId } = await api.createGuide({
-        source: {
-          kind: "document",
-          title: title.trim() || "Written instructions",
-          location: name || "pasted.md",
-        },
+        source: { kind: "document", title: name, location: file?.name ?? "pasted.md" },
         media: {
           kind: "url",
           url: `data:text/markdown;base64,${utf8Base64(trimmed)}`,
@@ -217,29 +260,53 @@ function ManualForm({
 
   return (
     <form className={styles.form} onSubmit={submit}>
-      <Field label="Paste the instructions">
-        <textarea
-          className={styles.input}
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="1. Unplug the console. 2. Remove the six screws..."
-        />
-      </Field>
-      <label className={styles.file}>
-        <input
-          type="file"
-          accept=".md,.markdown,.txt,text/plain,text/markdown"
-          onChange={async (e) => {
-            const f = e.target.files?.[0];
-            if (!f) return;
-            setText(await f.text());
-            setName(f.name);
-            if (!title) setTitle(titleFromFile(f.name));
-          }}
-        />
-        <Icon name="document" />
-        {name || "Or choose a Markdown or text file"}
-      </label>
+      <div className={styles.segmented} role="radiogroup" aria-label="How to add the instructions">
+        {MODES.map((m) => (
+          <label key={m.mode} className={cx(styles.segment, mode === m.mode && styles.segmentOn)}>
+            <input
+              type="radio"
+              name="manual-mode"
+              value={m.mode}
+              checked={mode === m.mode}
+              onChange={() => setMode(m.mode)}
+            />
+            {m.label}
+          </label>
+        ))}
+      </div>
+      {mode === "paste" ? (
+        <Field label="Paste the instructions">
+          <textarea
+            className={styles.input}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="1. Unplug the console. 2. Remove the six screws..."
+          />
+        </Field>
+      ) : null}
+      {mode === "file" ? (
+        <label className={styles.file}>
+          <input
+            type="file"
+            accept=".pdf,.md,.markdown,.txt,application/pdf,text/plain,text/markdown"
+            onChange={(e) => void chooseFile(e.target.files?.[0])}
+          />
+          <Icon name="document" />
+          {file ? file.name : "Choose a PDF, Markdown or text file"}
+        </label>
+      ) : null}
+      {mode === "link" ? (
+        <Field label="Link to a help page, PDF or text file">
+          <input
+            className={styles.input}
+            type="url"
+            inputMode="url"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            placeholder="https://support.example.com/descale-your-kettle"
+          />
+        </Field>
+      ) : null}
       <Field label="Name">
         <input
           className={styles.input}
@@ -248,13 +315,15 @@ function ManualForm({
           placeholder="Replace a bike brake pad"
         />
       </Field>
-      {tooLong ? <p className={styles.error}>That is longer than 200,000 characters.</p> : null}
+      {tooLong && mode !== "link" && !isPdf ? (
+        <p className={styles.error}>That is longer than 200,000 characters.</p>
+      ) : null}
       {error ? (
         <p className={styles.error} role="alert">
           {error}
         </p>
       ) : null}
-      <Button type="submit" block disabled={!trimmed || tooLong || busy}>
+      <Button type="submit" block disabled={!ready || busy}>
         {busy ? "Starting" : "Build the guide"}
       </Button>
     </form>
@@ -289,7 +358,7 @@ export function AddInstructionsSheet({
       {pending?.choice === "video" ? <VideoForm initialFile={pending.file} /> : null}
       {pending?.choice === "link" ? <LinkForm /> : null}
       {pending?.choice === "manual" ? (
-        <ManualForm initialText={pending.text} initialName={pending.file?.name} />
+        <ManualForm initialText={pending.text} initialFile={pending.file} />
       ) : null}
     </Sheet>
   );

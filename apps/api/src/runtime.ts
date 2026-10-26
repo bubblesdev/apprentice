@@ -14,6 +14,7 @@ import {
   BUILD_GUIDE_JOB,
   FfmpegFrameExtractor,
   buildGuideHandler,
+  ingestDocument,
   ingestRemoteVideo,
   type BuildGuidePayload,
 } from "@apprentice/pipeline";
@@ -85,7 +86,7 @@ export async function createRuntime(env: ApiEnv, options: RuntimeOptions = {}) {
       frames,
       builds: persistence.builds,
       clock,
-      prepare: (p) => ingestRemoteVideo(p, uploads),
+      prepare: async (p) => ingestDocument(await ingestRemoteVideo(p, uploads)),
       adaptersFor: (guideId) =>
         adapters(meter({ kind: "guide", id: guideId }, env.GUIDE_BUDGET_USD)),
     }),

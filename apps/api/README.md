@@ -30,4 +30,4 @@ Invalid bodies return 400 with zod issues; events that do not fit the coach stat
 
 `APPRENTICE_FAKE_JUDGE=pass` (fake mode only) passes every live check so the coach UI can be walked end to end in development. It never runs against real models.
 
-Ingest: uploads are stored by content hash in `UPLOAD_DIR`; a direct video link is downloaded once by the build job; the models receive the file by upload (cached by content). `POST /guides` only accepts local files inside `UPLOAD_DIR`. Not built yet: PDF text extraction, help-page fetching and R2 for evidence frames (they are in memory).
+Ingest: uploads are stored by content hash in `UPLOAD_DIR`; a direct video link is downloaded once by the build job; the models receive the file by upload (cached by content). `POST /guides` only accepts local files inside `UPLOAD_DIR`. Documents: an uploaded PDF or a link to a help page, PDF or text file is turned into text by the build job (unpdf, Readability). Server-side fetches refuse hosts that resolve to private or local addresses, on every redirect. Not built yet: R2 for evidence frames (they are in memory).

@@ -13,6 +13,8 @@ beforeEach(async () => {
 });
 afterEach(async () => rm(dir, { recursive: true, force: true }));
 
+const publicDns = async () => ["93.184.216.34"];
+
 const streamOf = (...chunks: number[][]) => new Blob(chunks.map((c) => new Uint8Array(c))).stream();
 
 describe("storeStream", () => {
@@ -53,7 +55,7 @@ describe("ingestRemoteVideo", () => {
 
   it("downloads a direct video link once and points the job at the local file", async () => {
     const calls: string[] = [];
-    const opts = { dir, maxBytes: 100, fetch: fetchVideo(calls) };
+    const opts = { dir, maxBytes: 100, fetch: fetchVideo(calls), resolve: publicDns };
     const first = await ingestRemoteVideo(payload("video_url", "https://example.com/v.mp4"), opts);
     const second = await ingestRemoteVideo(payload("video_url", "https://example.com/v.mp4"), opts);
     expect(calls).toHaveLength(1);
@@ -64,10 +66,17 @@ describe("ingestRemoteVideo", () => {
   });
 
   it("refuses a link that is not a video", async () => {
-    const opts = { dir, maxBytes: 100, fetch: fetchVideo([], "text/html") };
+    const opts = { dir, maxBytes: 100, fetch: fetchVideo([], "text/html"), resolve: publicDns };
     await expect(
       ingestRemoteVideo(payload("video_url", "https://example.com/page"), opts),
     ).rejects.toThrow(/straight at a video/);
+  });
+
+  it("refuses links to private addresses", async () => {
+    const opts = { dir, maxBytes: 100, fetch: fetchVideo([]), resolve: async () => ["10.0.0.5"] };
+    await expect(
+      ingestRemoteVideo(payload("video_url", "https://intranet.example/v.mp4"), opts),
+    ).rejects.toThrow(/private/);
   });
 
   it("leaves uploaded and fixture sources alone", async () => {

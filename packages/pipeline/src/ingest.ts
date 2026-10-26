@@ -4,6 +4,7 @@ import { mkdir, rename, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import type { BuildGuidePayload } from "./job.js";
+import { safeFetch, type Resolver } from "./safe-fetch.js";
 
 export class IngestError extends Error {
   constructor(message: string) {
@@ -18,6 +19,7 @@ const EXTENSIONS: Record<string, string> = {
   "video/webm": "webm",
   "text/plain": "txt",
   "text/markdown": "md",
+  "application/pdf": "pdf",
 };
 
 export function extensionFor(mime: string): string {
@@ -64,6 +66,7 @@ export interface RemoteVideoOptions {
   dir: string;
   maxBytes: number;
   fetch?: typeof fetch;
+  resolve?: Resolver;
 }
 
 /**
@@ -85,7 +88,7 @@ export async function ingestRemoteVideo(
     .find((p) => existsSync(p));
   let path = existing;
   if (!path) {
-    const res = await (opts.fetch ?? fetch)(media.url, { redirect: "follow" });
+    const res = await safeFetch(media.url, opts);
     const mime = res.headers.get("content-type")?.split(";")[0]?.trim() ?? "";
     if (!res.ok || !res.body)
       throw new IngestError(`Could not download the video (HTTP ${res.status})`);
