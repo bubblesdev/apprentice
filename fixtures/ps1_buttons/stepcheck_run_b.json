@@ -1,0 +1,98 @@
+[
+  {
+    "step": 2,
+    "case": "finished",
+    "verdict": "done",
+    "pass": true
+  },
+  {
+    "step": 2,
+    "case": "just_started",
+    "verdict": "not_yet",
+    "pass": true
+  },
+  {
+    "step": 3,
+    "case": "finished",
+    "verdict": "done",
+    "pass": true
+  },
+  {
+    "step": 3,
+    "case": "just_started",
+    "verdict": "not_yet",
+    "pass": true
+  },
+  {
+    "step": 4,
+    "case": "finished",
+    "verdict": "wrong",
+    "pass": false
+  },
+  {
+    "step": 4,
+    "case": "just_started",
+    "verdict": "skipped",
+    "pass": true
+  },
+  {
+    "step": 5,
+    "case": "finished",
+    "verdict": "not_yet",
+    "pass": false
+  },
+  {
+    "step": 5,
+    "case": "just_started",
+    "verdict": "not_yet",
+    "pass": true
+  },
+  {
+    "step": 6,
+    "case": "finished",
+    "verdict": "not_yet",
+    "pass": false
+  },
+  {
+    "step": 6,
+    "case": "just_started",
+    "verdict": "skipped",
+    "pass": true
+  },
+  {
+    "step": 7,
+    "case": "finished",
+    "verdict": "not_yet",
+    "pass": false
+  },
+  {
+    "step": 7,
+    "case": "just_started",
+    "verdict": "skipped",
+    "pass": true
+  },
+  {
+    "step": 8,
+    "case": "finished",
+    "verdict": "not_yet",
+    "pass": false
+  },
+  {
+    "step": 8,
+    "case": "just_started",
+    "verdict": "not_yet",
+    "pass": true
+  },
+  {
+    "step": 9,
+    "case": "finished",
+    "verdict": "not_yet",
+    "pass": false
+  },
+  {
+    "step": 9,
+    "case": "just_started",
+    "verdict": "not_yet",
+    "pass": true
+  }
+]

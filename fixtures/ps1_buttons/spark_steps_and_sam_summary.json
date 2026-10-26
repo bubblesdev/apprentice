@@ -1,0 +1,107 @@
+{
+  "source": {
+    "title": "How to Fix Sticking or Squeaking Buttons on the PlayStation 1",
+    "attribution": "Wikimedia Commons, CC BY 3.0",
+    "durationS": 463.8,
+    "fps": 10
+  },
+  "sam": {
+    "round button": {
+      "frames_with_hits": 2235,
+      "distinct_ids": [0, 1, 2, 3, 5, 6, 9, 10, 12, 13, 15, 16],
+      "seconds": 196.5
+    },
+    "plastic bracket": {
+      "frames_with_hits": 1285,
+      "distinct_ids": [0],
+      "seconds": 168.6
+    },
+    "screwdriver": {
+      "frames_with_hits": 196,
+      "distinct_ids": [0, 1],
+      "seconds": 190.3
+    }
+  },
+  "steps": [
+    {
+      "start_s": 0,
+      "end_s": 28,
+      "title": "Confirm sticking Power and Open buttons",
+      "parts_and_tools": ["PlayStation console"],
+      "visible_check": "Power button sticks down and Open button squeaks or hesitates when pressed",
+      "warning": "Unplug power and remove disc and cables before handling"
+    },
+    {
+      "start_s": 28,
+      "end_s": 48,
+      "title": "Remove bottom screws and separate shell",
+      "parts_and_tools": ["Phillips screwdriver", "bottom case screws"],
+      "visible_check": "Six bottom screws out and top lid assembly lifted free from bottom chassis",
+      "warning": "Do not pry aggressively; keep screws together so none are lost"
+    },
+    {
+      "start_s": 48,
+      "end_s": 68,
+      "title": "Isolate top cover and remove Power button cap",
+      "parts_and_tools": ["top cover", "Power button cap"],
+      "visible_check": "Underside of top cover exposed and round Power cap popped free by pressing clips",
+      "warning": "Press clips gently to avoid snapping plastic tabs"
+    },
+    {
+      "start_s": 68,
+      "end_s": 135,
+      "title": "Inspect Power button and apply silicone grease",
+      "parts_and_tools": ["Power button cap", "coil spring", "silicone grease", "fingers"],
+      "visible_check": "Thin clear grease film only on side rub tabs and center spring post, excess wiped away",
+      "warning": "Use only plastic-safe silicone grease in a very thin layer; keep grease off outer face"
+    },
+    {
+      "start_s": 135,
+      "end_s": 165,
+      "title": "Reinstall spring and Power button cap",
+      "parts_and_tools": ["coil spring", "Power button cap", "top cover"],
+      "visible_check": "Spring seated on center post and button clicks in facing correct direction with free return",
+      "warning": "Verify orientation before snapping in; spring can pop out and get lost"
+    },
+    {
+      "start_s": 165,
+      "end_s": 205,
+      "title": "Remove Open slider assembly",
+      "parts_and_tools": ["Phillips screwdriver", "Open slider assembly", "two screws"],
+      "visible_check": "Two screws out and rectangular slider block lifted away to reveal Open button post",
+      "warning": "Hold assembly while unscrewing; note spring position before lifting"
+    },
+    {
+      "start_s": 205,
+      "end_s": 285,
+      "title": "Lubricate Open slider wear surfaces",
+      "parts_and_tools": ["Open slider assembly", "silicone grease"],
+      "visible_check": "All plastic-on-plastic slide and contact edges show thin even grease sheen",
+      "warning": "Do not flood with grease; thin layer only where plastics rub"
+    },
+    {
+      "start_s": 285,
+      "end_s": 355,
+      "title": "Lubricate and reinstall Open button cap",
+      "parts_and_tools": ["Open button cap", "top cover", "silicone grease"],
+      "visible_check": "Open cap tabs and housing slide slots lightly greased and cap snapped in freely moving",
+      "warning": "This button has no separate spring; do not stretch or lose slider spring"
+    },
+    {
+      "start_s": 355,
+      "end_s": 430,
+      "title": "Reinstall slider assembly and secure screws",
+      "parts_and_tools": ["Open slider assembly", "two screws", "Phillips screwdriver"],
+      "visible_check": "Slider seated in guides, spring hooked, and both screws snug with assembly sliding smoothly",
+      "warning": "Seat screws counterclockwise to click first to avoid cross-threading; hold assembly down while driving screws"
+    },
+    {
+      "start_s": 430,
+      "end_s": 460,
+      "title": "Test buttons and reassemble console",
+      "parts_and_tools": ["top cover", "bottom chassis", "bottom case screws"],
+      "visible_check": "Power and Open press quietly, return crisply, and lid opens without sticking",
+      "warning": "Test before fully tightening case; keep fingers clear of lid spring"
+    }
+  ]
+}
