@@ -51,6 +51,10 @@ Apprentice turns instructions (a video, a manual, a help doc) into a verified st
 
 `packages/meta` implements the ports on Muse Spark (`SparkReasoner`) and SAM 3.1 (`SamSegmenter`). The live client is wrapped as `CachedMetaApi(RetryingMetaApi(MetaClient))`: every distinct request is hashed, paid for once and replayed after. A `CostMeter` per guide, session or eval run records each call (cache hits at zero cost) and enforces a hard cap. `APPRENTICE_ADAPTERS` selects `live`, `replay` (recordings only) or `fake` (fixtures/ from the spikes); see ADR 0006.
 
+## Pipeline
+
+`buildGuide` runs `draft_steps -> refine_boundaries -> reference_frames -> ground_parts`. Each stage's output is stored under `name@vN:<hash of input>`, so a rebuild reuses everything whose input did not change and never repeats paid work. Boundary refinement fixes the weak link found in spike 2: Muse Spark picks the first finished frame from dense frames around each drafted end, and a confident answer moves the end and the next step's start. Grounding uses SAM 3.1 on single reference frames per step rather than whole-video tracking, because identities fragment over long clips (spike 1).
+
 ## Coach state machine
 
 ```

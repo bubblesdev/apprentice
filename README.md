@@ -34,6 +34,7 @@ Development: `pnpm install`, then `pnpm check` (lint, typecheck, tests).
 - **26 Oct 2026:** idea; spike 1 (SAM 3.1 tracking + Muse Spark step split on a real repair video); spike 2 (per-step check); clickable UI prototype; architecture and decisions; monorepo scaffold with `core` and `meta` packages, tests and CI.
 - **26 Oct 2026:** `meta` adapters: Muse Spark reasoner (step draft, boundary refinement, strict-instructor step judge), SAM 3.1 segmenter, request-hash response cache (each real call paid once), retries, per-scope cost meter with a hard cap, and fakes that replay the recorded spike outputs.
 - **26 Oct 2026:** `coach` package: pure verify-then-advance state machine and policy (two-sample agreement, required parts, show me closer, retry, unsafe stop, safety briefings, trainee override marked unverified), step verifier on the Meta ports, run report; exhaustive state and event tests.
+- **26 Oct 2026:** `pipeline` package: step draft, boundary refinement on dense frames around each drafted end, reference frames and SAM part grounding as idempotent stages keyed by a hash of their input; tested on the recorded PS1 job (a rebuild makes no model calls).
 
 ## Running the spike
 

@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
+import { canonicalJson } from "@apprentice/core";
 import { z } from "zod";
 import type { FilesApi, ResponseResult, ResponsesApi } from "./client.js";
 
@@ -8,19 +9,6 @@ import type { FilesApi, ResponseResult, ResponsesApi } from "./client.js";
 export interface ResponseCache {
   get(key: string): Promise<unknown>;
   set(key: string, value: unknown): Promise<void>;
-}
-
-/** JSON with object keys sorted, so equal requests hash equally whatever their key order. */
-export function canonicalJson(value: unknown): string {
-  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(",")}]`;
-  if (value !== null && typeof value === "object") {
-    const entries = Object.entries(value)
-      .filter(([, v]) => v !== undefined)
-      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
-      .map(([k, v]) => `${JSON.stringify(k)}:${canonicalJson(v)}`);
-    return `{${entries.join(",")}}`;
-  }
-  return JSON.stringify(value);
 }
 
 export function sha256(data: string | Uint8Array): string {

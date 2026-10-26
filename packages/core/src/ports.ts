@@ -4,8 +4,8 @@ import type { VerdictKind } from "./session.js";
 /** Raw bytes plus a MIME type, or a reference to media already uploaded to a provider. */
 export type Media =
   | { kind: "bytes"; mime: string; data: Uint8Array }
-  | { kind: "provider_file"; fileId: string; mime?: string }
-  | { kind: "url"; url: string; mime?: string };
+  | { kind: "provider_file"; fileId: string; mime?: string | undefined }
+  | { kind: "url"; url: string; mime?: string | undefined };
 
 /** One step as first drafted from a source, before boundary refinement. */
 export interface StepDraft {
@@ -15,9 +15,9 @@ export interface StepDraft {
   endS: number;
   parts: string[];
   doneWhen: string;
-  warning?: string;
+  warning?: string | undefined;
   /** The model's own safety call; the pipeline falls back to "caution" when only a warning exists. */
-  safety?: SafetyLevel;
+  safety?: SafetyLevel | undefined;
 }
 
 export interface StepJudgement {
