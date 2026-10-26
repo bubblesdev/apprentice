@@ -60,7 +60,7 @@ briefing ─► doing(step) ─► verifying ─┬─► passed ─► doing(st
                                       └─► blocked  (unsafe: stop, explain, require acknowledgement)
 ```
 
-Advance only when the verifier says done with confidence >= threshold on two consecutive samples, and required parts are present (Segmenter). All thresholds live in one policy object and are tuned by `packages/eval`.
+Advance only when the verifier says done with confidence >= threshold on two consecutive samples, and required parts are present (Segmenter). All thresholds live in one policy object (`CoachPolicy`) and are tuned by `packages/eval`. `decide` and `transition` in `packages/coach` are pure; `StepVerifier` is the only part that calls models. Stop-level safety steps open with a briefing; a trainee override after repeated closer requests is recorded as `decidedBy: "trainee"` and reported as unverified.
 
 ## Data
 
