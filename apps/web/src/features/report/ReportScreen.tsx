@@ -8,6 +8,7 @@ import { cx } from "../../lib/cx";
 import { duration } from "../../lib/format";
 import { useResource } from "../../lib/useResource";
 import styles from "./Report.module.css";
+import { AuditCard } from "./AuditCard";
 import { caughtLabel, summarise } from "./reportView";
 
 const CIRCUMFERENCE = 2 * Math.PI * 42;
@@ -38,6 +39,9 @@ export function ReportScreen() {
   const sessionId = useParams().sessionId ?? "";
   const report = useResource(`report:${sessionId}`, () => api.report(sessionId));
   const r = report.data;
+  const audit = useResource(`audit:${sessionId}:${r?.complete ? "done" : "open"}`, () =>
+    r?.complete ? api.audit(sessionId) : Promise.resolve(undefined),
+  );
   const summary = r ? summarise(r) : undefined;
   const ratio = r && r.total ? r.passed / r.total : 0;
 
@@ -126,6 +130,8 @@ export function ReportScreen() {
               </div>
             </Card>
           ) : null}
+
+          {r.complete ? <AuditCard audit={audit.data} loading={audit.loading} /> : null}
 
           <section className={styles.evidence}>
             <h2 className="eyebrow">Evidence, step by step</h2>

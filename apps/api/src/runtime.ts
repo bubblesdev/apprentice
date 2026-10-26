@@ -112,10 +112,11 @@ export async function createRuntime(env: ApiEnv, options: RuntimeOptions = {}) {
       if (existing) return existing;
       const created = adapters(
         meter({ kind: "session", id: sessionId }, env.SESSION_BUDGET_USD),
-      ).then(({ reasoner, segmenter, transcriber }) => ({
+      ).then(({ reasoner, segmenter, transcriber, auditor }) => ({
         verifier: new StepVerifier({ reasoner, segmenter, policy }),
         reasoner,
         transcriber,
+        auditor,
       }));
       sessionAdapters.set(sessionId, created);
       return created;

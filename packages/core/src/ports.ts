@@ -1,4 +1,5 @@
 import type { Box, SafetyLevel, Step } from "./guide.js";
+import type { RunAudit, RunReport } from "./api.js";
 import type { VerdictKind } from "./session.js";
 
 /** Raw bytes plus a MIME type, or a reference to media already uploaded to a provider. */
@@ -90,4 +91,22 @@ export interface Illustrator {
 /** Pulls still frames out of a source video (ffmpeg in the worker, a fixture in tests). */
 export interface FrameExtractor {
   frameAt(video: Media, t: number): Promise<Media>;
+}
+
+export interface SafetyCall {
+  level: SafetyLevel;
+  note?: string | undefined;
+}
+
+/** Muse Wonder: safety review of a drafted guide, and an audit of a finished run. */
+export interface Auditor {
+  reviewSafety(input: {
+    title: string;
+    steps: { title: string; instruction: string; warning?: string | undefined }[];
+  }): Promise<SafetyCall[]>;
+  auditRun(input: {
+    title: string;
+    steps: { title: string; doneWhen: string }[];
+    report: RunReport;
+  }): Promise<RunAudit>;
 }

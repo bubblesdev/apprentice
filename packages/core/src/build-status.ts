@@ -8,6 +8,7 @@ export const BuildStage = z.object({
     "reference_frames",
     "ground_parts",
     "draw_diagrams",
+    "review_safety",
   ]),
   state: z.enum(["running", "done", "skipped"]),
   reused: z.boolean().optional(),

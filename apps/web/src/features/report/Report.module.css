@@ -144,3 +144,46 @@
   color: var(--color-coral-soft);
   font-size: var(--type-small-size);
 }
+
+.audit {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.auditHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.auditSource {
+  font-size: 12px;
+  color: var(--color-accent);
+}
+
+.auditMuted {
+  color: var(--color-muted);
+}
+
+.auditList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.auditList ul {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--color-text-soft);
+}
+
+.auditLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-muted);
+}

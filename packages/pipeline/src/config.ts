@@ -1,4 +1,5 @@
 import type {
+  Auditor,
   FrameExtractor,
   Illustrator,
   MediaStore,
@@ -40,4 +41,6 @@ export interface PipelineDeps {
   /** Optional: with both, each step gets a diagram stored in `media`. */
   illustrator?: Illustrator;
   media?: MediaStore;
+  /** Optional: Muse Wonder's safety review of every step. */
+  auditor?: Auditor;
 }

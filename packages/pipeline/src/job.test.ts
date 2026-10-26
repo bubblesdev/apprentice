@@ -79,6 +79,7 @@ describe("runBuildGuideJob", () => {
       ["reference_frames", "done"],
       ["ground_parts", "done"],
       ["draw_diagrams", "skipped"],
+      ["review_safety", "skipped"],
     ]);
 
     const failing = buildGuideHandler({

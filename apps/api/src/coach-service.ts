@@ -11,6 +11,7 @@ import {
 } from "@apprentice/coach";
 import {
   BudgetExceededError,
+  type Auditor,
   type ClientCoachEvent,
   type Clock,
   type CoachUpdate,
@@ -19,6 +20,7 @@ import {
   type GuideRepository,
   type Media,
   type MediaStore,
+  type RunAudit,
   type SessionRepository,
   type Step,
   type Transcriber,
@@ -42,6 +44,7 @@ export interface SessionAdapters {
   verifier: StepVerifier;
   reasoner: VisionReasoner;
   transcriber: Transcriber;
+  auditor: Auditor;
 }
 
 export interface CoachServiceDeps {
@@ -99,6 +102,8 @@ export class CoachService {
   private readonly queues = new Map<string, Promise<unknown>>();
   /** The latest live frame per session, so an answer can look at the trainee's work. */
   private readonly lastFrames = new Map<string, Media>();
+  /** One audit per finished run; the run cannot change after it completes. */
+  private readonly audits = new Map<string, Promise<RunAudit>>();
   private frameCounter = 0;
 
   constructor(private readonly deps: CoachServiceDeps) {}
@@ -247,5 +252,24 @@ export class CoachService {
       live: frame ? [frame] : [],
     });
     return { question: text, answer };
+  }
+
+  /** Muse Wonder's review of a finished run (the rules fallback in fake mode). */
+  audit(sessionId: string): Promise<RunAudit> {
+    const { ctx, guide } = this.loaded(sessionId);
+    if (ctx.session.state !== "complete")
+      throw new CoachError("not_ready", "The run is still going");
+    const existing = this.audits.get(sessionId);
+    if (existing) return existing;
+    const created = this.deps.adaptersFor(sessionId).then(({ auditor }) =>
+      auditor.auditRun({
+        title: guide.title,
+        steps: guide.steps.map((s) => ({ title: s.title, doneWhen: s.doneWhen })),
+        report: buildReport(guide, ctx.session),
+      }),
+    );
+    created.catch(() => this.audits.delete(sessionId));
+    this.audits.set(sessionId, created);
+    return created;
   }
 }

@@ -50,7 +50,7 @@ export interface BuildGuideHandlerDeps extends Omit<BuildGuideJobDeps, "pipeline
   /** Model adapters for one guide build, metered and capped against that guide. */
   adaptersFor: (
     guideId: string,
-  ) => Promise<Pick<PipelineDeps, "reasoner" | "segmenter" | "illustrator">>;
+  ) => Promise<Pick<PipelineDeps, "reasoner" | "segmenter" | "illustrator" | "auditor">>;
   frames: PipelineDeps["frames"];
   /** Where step diagrams are stored; without it no diagrams are drawn. */
   media?: MediaStore;
@@ -78,7 +78,7 @@ export function buildGuideHandler(
     };
     try {
       const payload = deps.prepare ? await deps.prepare(parsed) : parsed;
-      const { reasoner, segmenter, illustrator } = await deps.adaptersFor(guideId);
+      const { reasoner, segmenter, illustrator, auditor } = await deps.adaptersFor(guideId);
       await runBuildGuideJob(payload, {
         ...deps,
         pipeline: {
@@ -86,6 +86,7 @@ export function buildGuideHandler(
           segmenter,
           frames: deps.frames,
           ...(illustrator && deps.media ? { illustrator, media: deps.media } : {}),
+          ...(auditor ? { auditor } : {}),
         },
         onProgress: (id, p) => {
           deps.onProgress?.(id, p);

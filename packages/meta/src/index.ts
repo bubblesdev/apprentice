@@ -14,3 +14,4 @@ export * from "./spark.js";
 export * from "./spark-output.js";
 export * from "./illustrator.js";
 export * from "./transcriber.js";
+export * from "./wonder.js";

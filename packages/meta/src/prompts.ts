@@ -96,3 +96,38 @@ export function answerPrompt(step: StepBrief, question: string, hasFrame: boolea
     "not about this job, say you can only help with this step. Plain text only."
   );
 }
+
+/** Muse Wonder reviews every step of a drafted guide for hazards. */
+export function safetyReviewPrompt(
+  title: string,
+  steps: { title: string; instruction: string; warning?: string | undefined }[],
+): string {
+  return (
+    "You are a careful workshop safety reviewer. A beginner will follow this guide while a coach " +
+    `watches through a phone camera. Guide: ${JSON.stringify(title)}. Steps, in order:\n` +
+    JSON.stringify(steps.map((s, i) => ({ step: i + 1, ...s }))) +
+    "\nFor every step, in the same order, give a safety level: stop when the step involves mains " +
+    "electricity, gas, blades, heat, pressure or harmful chemicals and the beginner must confirm a " +
+    "precaution first; caution for smaller risks (sharp edges, small parts, pinch points); none " +
+    "otherwise. Give a short imperative note for stop and caution (for example: Unplug the console " +
+    'first). JSON only: {"steps":[{"level":"none|caution|stop","note":"..."}]}'
+  );
+}
+
+/** Muse Wonder reads a finished run and writes the supervisor's review. */
+export function runAuditPrompt(input: {
+  title: string;
+  steps: { title: string; doneWhen: string }[];
+  report: unknown;
+}): string {
+  return (
+    "You are a senior technician reviewing a trainee's run of a hands-on job, using only the " +
+    `coach's evidence. Guide: ${JSON.stringify(input.title)}. Steps: ${JSON.stringify(input.steps)}. ` +
+    `Run report (verdicts, caught mistakes, closer requests, unverified steps): ${JSON.stringify(input.report)}.\n` +
+    "Write: summary (two plain sentences on how the job went), concerns (steps a supervisor should " +
+    "check: unverified steps, mistakes caught late, anything unsafe), and suggestions (how to reword " +
+    "a step so the next trainee gets it right, only where the run shows trouble). Use 0-based step " +
+    'indexes. JSON only: {"summary":"...","concerns":[{"stepIndex":0,"note":"..."}],' +
+    '"suggestions":[{"stepIndex":0,"suggestion":"..."}]}'
+  );
+}

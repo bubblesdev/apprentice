@@ -8,6 +8,7 @@ import { diagramStage } from "./stages/diagrams.js";
 import { draftStage } from "./stages/draft.js";
 import { groundingStage } from "./stages/grounding.js";
 import { referenceStage } from "./stages/references.js";
+import { mergeSafety, safetyStage } from "./stages/safety.js";
 
 export const StageName = z.enum([
   "draft_steps",
@@ -15,6 +16,7 @@ export const StageName = z.enum([
   "reference_frames",
   "ground_parts",
   "draw_diagrams",
+  "review_safety",
 ]);
 export type StageName = z.infer<typeof StageName>;
 
@@ -186,6 +188,43 @@ export async function buildGuide(
     report({ stage: "draw_diagrams", state: "skipped", detail: "Diagrams are off" });
   }
 
+  let reviewed: { level: SafetyLevel; note?: string | undefined }[] = [];
+  if (deps.auditor) {
+    report({ stage: "review_safety", state: "running" });
+    try {
+      const review = await runStage(
+        safetyStage,
+        {
+          title: input.source.title,
+          steps: steps.map((s) => ({
+            title: s.title,
+            instruction: s.instruction,
+            warning: s.warning,
+          })),
+        },
+        { auditor: deps.auditor },
+        store,
+      );
+      artifacts.review_safety = review.key;
+      reviewed = review.output.steps;
+      const flagged = reviewed.filter((r) => r.level !== "none").length;
+      report({
+        stage: "review_safety",
+        state: "done",
+        reused: review.reused,
+        detail: `${flagged} of ${steps.length} steps need care`,
+      });
+    } catch {
+      report({
+        stage: "review_safety",
+        state: "skipped",
+        detail: "Safety review unavailable; using the draft's warnings",
+      });
+    }
+  } else {
+    report({ stage: "review_safety", state: "skipped", detail: "No safety reviewer configured" });
+  }
+
   const guide = Guide.parse({
     id: input.guideId,
     title: input.source.title,
@@ -201,7 +240,7 @@ export async function buildGuide(
       doneWhen: s.doneWhen,
       parts: parts[index] ?? [],
       referenceTimesS: referenceTimesS[index] ?? [],
-      safety: safetyOf(s),
+      safety: mergeSafety(safetyOf(s), reviewed[index]),
       ...(diagramKeys[index] ? { diagramKey: diagramKeys[index] } : {}),
     })),
   });

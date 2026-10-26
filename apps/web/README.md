@@ -28,4 +28,4 @@ Manual accepts pasted text, a PDF, Markdown or text file, or a link to a help pa
 
 Each step can show the expert photo or its Muse Image diagram.
 
-Not built yet: spoken questions (Voice Transcribe).
+Not built yet: nothing from the original scope; see the root README log.

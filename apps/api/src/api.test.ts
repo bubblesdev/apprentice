@@ -276,3 +276,17 @@ describe("questions", () => {
     expect((await call(app, "POST", `/sessions/${id}/ask`, {})).status).toBe(400);
   });
 });
+
+describe("run audit", () => {
+  it("reviews a finished run once, and refuses while it is running", async () => {
+    const { app } = await runtime();
+    const id = CoachUpdate.parse(
+      (await call(app, "POST", "/sessions", { guideId: "ps1-buttons" })).json,
+    ).session.id;
+    expect((await call(app, "GET", `/sessions/${id}/audit`)).status).toBe(409);
+    await event(app, id, "end");
+    const audit = await call(app, "GET", `/sessions/${id}/audit`);
+    expect(audit.status).toBe(200);
+    expect(audit.json).toMatchObject({ source: "rules", concerns: [{ stepIndex: 0 }] });
+  });
+});

@@ -131,3 +131,17 @@ export type AskRequest = z.infer<typeof AskRequest>;
 
 export const AskResponse = z.object({ question: z.string(), answer: z.string() });
 export type AskResponse = z.infer<typeof AskResponse>;
+
+/** Muse Wonder's review of a finished run, shown on the report. */
+export const RunAudit = z.object({
+  summary: z.string(),
+  /** Steps a supervisor should look at: weak passes, unverified steps, unsafe moments. */
+  concerns: z.array(z.object({ stepIndex: z.number().int().nonnegative(), note: z.string() })),
+  /** Wording changes that would help the next trainee, for the guide's author. */
+  suggestions: z.array(
+    z.object({ stepIndex: z.number().int().nonnegative(), suggestion: z.string() }),
+  ),
+  /** "model" when Muse Wonder wrote it, "rules" for the credit-free fallback. */
+  source: z.enum(["model", "rules"]),
+});
+export type RunAudit = z.infer<typeof RunAudit>;

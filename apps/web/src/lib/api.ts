@@ -4,6 +4,7 @@ import {
   ClientMessage,
   CoachUpdate,
   Guide,
+  RunAudit,
   RunReport,
   ServerMessage,
   type AskRequest,
@@ -78,6 +79,7 @@ export const api = {
     request(`/sessions/${encodeURIComponent(id)}/frames`, CoachUpdate, json({ frames })),
   ask: (id: string, body: AskRequest) =>
     request(`/sessions/${encodeURIComponent(id)}/ask`, AskResponse, json(body)),
+  audit: (id: string) => request(`/sessions/${encodeURIComponent(id)}/audit`, RunAudit),
   report: (id: string) => request(`/sessions/${encodeURIComponent(id)}/report`, RunReport),
 };
 
