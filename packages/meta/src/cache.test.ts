@@ -1,13 +1,13 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { canonicalJson } from "@apprentice/core";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   CacheMissError,
   CachedMetaApi,
   FileResponseCache,
   MemoryResponseCache,
-  canonicalJson,
   responseKey,
 } from "./cache.js";
 import { StubMetaApi } from "./testing/stub-api.js";
