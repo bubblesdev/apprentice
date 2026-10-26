@@ -60,6 +60,8 @@ describe.runIf(url)("Postgres store", () => {
     await repo.put(session);
     await repo.put({ ...session, state: "verifying" });
     expect((await repo.get("s1"))?.state).toBe("verifying");
+    await repo.put({ ...session, id: "s2", guideId: "other" });
+    expect((await repo.listByGuide("g1")).map((s) => s.id)).toEqual(["s1"]);
   });
 
   it("stores build progress per guide", async () => {

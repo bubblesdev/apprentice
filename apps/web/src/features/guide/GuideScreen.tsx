@@ -1,4 +1,4 @@
-import type { Guide, Step } from "@apprentice/core";
+import type { Guide, Step, StepInsight } from "@apprentice/core";
 import { useId, useState } from "react";
 import { Navigate, useNavigate, useParams } from "react-router";
 import { Button, IconButton, IconLink } from "../../components/Button";
@@ -26,11 +26,13 @@ function StepItem({
   step,
   open,
   onToggle,
+  insight,
 }: {
   guide: Guide;
   step: Step;
   open: boolean;
   onToggle: () => void;
+  insight: StepInsight | undefined;
 }) {
   const detailId = useId();
   const [view, setView] = useState<"photo" | "diagram">(
@@ -53,6 +55,11 @@ function StepItem({
           <span className={styles.stepTitle}>{step.title}</span>
           {step.parts.length ? (
             <span className={styles.stepParts}>{step.parts.map((p) => p.name).join(" · ")}</span>
+          ) : null}
+          {insight?.flagged ? (
+            <span className={styles.struggle}>
+              {insight.runs - insight.firstTry} of {insight.runs} trainees needed another try
+            </span>
           ) : null}
         </span>
         {isVideo ? <span className={styles.time}>{clock(step.startS)}</span> : null}
@@ -113,6 +120,7 @@ export function GuideScreen() {
   const loaded = useResource(`guide:${id}`, () => api.guide(id));
   const [edited, setEdited] = useState<Guide>();
   const [editing, setEditing] = useState(false);
+  const insights = useResource(`insights:${id}`, () => api.insights(id).catch(() => undefined));
   const guide = { ...loaded, data: edited ?? loaded.data };
   const [open, setOpen] = useState(0);
   const [starting, setStarting] = useState(false);
@@ -128,6 +136,7 @@ export function GuideScreen() {
         plural(g.steps.length, "step"),
         first && last && last.endS > first.startS ? aboutMinutes(last.endS - first.startS) : "",
         uniqueParts(g.steps, 2).join(", "),
+        insights.data?.runs ? plural(insights.data.runs, "run") : "",
       ]
         .filter(Boolean)
         .join(" · ")
@@ -197,6 +206,11 @@ export function GuideScreen() {
                 step={s}
                 open={open === s.index}
                 onToggle={() => setOpen(open === s.index ? -1 : s.index)}
+                insight={
+                  insights.data?.guideVersion === g.version
+                    ? insights.data.steps[s.index]
+                    : undefined
+                }
               />
             ))}
           </ol>

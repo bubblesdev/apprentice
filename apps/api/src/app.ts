@@ -1,3 +1,4 @@
+import { guideInsights } from "@apprentice/coach";
 import { resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -15,6 +16,7 @@ import {
   type JobQueue,
   type MediaStore,
   type ServerMessage,
+  type SessionRepository,
 } from "@apprentice/core";
 import {
   BUILD_GUIDE_JOB,
@@ -30,6 +32,7 @@ import { CoachError, type CoachService, type IncomingFrame } from "./coach-servi
 
 export interface AppDeps {
   guides: GuideRepository;
+  sessions: SessionRepository;
   builds: BuildStatusRepository;
   queue: JobQueue;
   media: MediaStore;
@@ -91,6 +94,13 @@ export function createApp(deps: AppDeps, app: Hono = new Hono()): Hono {
   app.get("/guides/:id", async (c) => {
     const guide = await deps.guides.get(c.req.param("id"));
     return guide ? c.json(guide) : c.json({ error: "Guide not found" }, 404);
+  });
+
+  /** Where trainees struggle across runs of the guide's current version. */
+  app.get("/guides/:id/insights", async (c) => {
+    const guide = await deps.guides.get(c.req.param("id"));
+    if (!guide) return c.json({ error: "Guide not found" }, 404);
+    return c.json(guideInsights(guide, await deps.sessions.listByGuide(guide.id)));
   });
 
   app.get("/guides/:id/build", async (c) => {

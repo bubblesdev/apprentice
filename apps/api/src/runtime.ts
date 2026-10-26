@@ -1,13 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { resolve } from "node:path";
 import { CoachPolicy, StepVerifier } from "@apprentice/coach";
-import {
-  InMemoryMediaStore,
-  systemClock,
-  type Clock,
-  type FrameExtractor,
-  type UsageScope,
-} from "@apprentice/core";
+import { systemClock, type Clock, type FrameExtractor, type UsageScope } from "@apprentice/core";
 import { CostMeter, MetaEnv, createMetaAdapters } from "@apprentice/meta";
 import { FakeFrameExtractor } from "@apprentice/meta/fake";
 import {
@@ -18,6 +12,7 @@ import {
   ingestRemoteVideo,
   type BuildGuidePayload,
 } from "@apprentice/pipeline";
+import { MediaEnv, mediaStoreFromEnv } from "@apprentice/store";
 import { createNodeWebSocket } from "@hono/node-ws";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -25,7 +20,7 @@ import { createApp } from "./app.js";
 import { CoachService, type ReferenceResolver, type SessionAdapters } from "./coach-service.js";
 import { memoryPersistence, postgresPersistence } from "./persistence.js";
 
-export const ApiEnv = MetaEnv.extend({
+export const ApiEnv = MetaEnv.merge(MediaEnv).extend({
   PORT: z.coerce.number().int().positive().default(8787),
   CORS_ORIGIN: z.string().min(1).default("http://localhost:5173"),
   /** Hard caps on Meta spend per guide build and per coaching session. */
@@ -75,7 +70,7 @@ export async function createRuntime(env: ApiEnv, options: RuntimeOptions = {}) {
     probe.mode === "fake"
       ? new FakeFrameExtractor(env.APPRENTICE_FIXTURE_JOB)
       : new FfmpegFrameExtractor();
-  const media = new InMemoryMediaStore();
+  const media = mediaStoreFromEnv(env);
   const uploads = { dir: resolve(env.UPLOAD_DIR), maxBytes: env.UPLOAD_MAX_MB * 1e6 };
   const policy = CoachPolicy.parse({});
 
@@ -128,6 +123,7 @@ export async function createRuntime(env: ApiEnv, options: RuntimeOptions = {}) {
   createApp(
     {
       guides,
+      sessions,
       builds: persistence.builds,
       queue,
       coach,

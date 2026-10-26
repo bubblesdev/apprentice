@@ -49,6 +49,7 @@ Development: `pnpm install`, then `pnpm check` (lint, typecheck, tests). Set `TE
 - **26 Oct 2026:** Muse Image step diagrams: `MuseIllustrator` (prompted with the step, its parts and the expert's finished frame), a fifth pipeline stage that stores one diagram per step (a failed diagram never fails the guide), a Photo/Diagram toggle on the Guide screen, and a clearly labelled placeholder in fake mode.
 - **26 Oct 2026:** voice questions: the coach's mic opens Ask about this step (tap to talk or type); the browser records and encodes 16 kHz mono WAV, Muse Voice Transcribe turns it into text, Muse Spark answers in two short sentences while looking at the trainee's latest frame; transcripts cached and metered per second.
 - **26 Oct 2026:** Muse Wonder: a safety review stage reads the whole guide and sets each step's level and note (the more severe of draft and review wins; a stop step needs acknowledging in the coach), and an audit of every finished run (summary, steps worth a second look, wording suggestions for the author) shown on the report. A labelled rule-based fallback stands in without credits.
+- **26 Oct 2026:** durable media (file store on a shared volume, Cloudflare R2 via signed S3 requests; keys checked so nothing escapes its folder) and guide insights: across runs of the current version, steps where trainees needed another try are flagged on the Guide screen for the author.
 
 ## Running the spike
 

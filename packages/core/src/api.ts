@@ -145,3 +145,26 @@ export const RunAudit = z.object({
   source: z.enum(["model", "rules"]),
 });
 export type RunAudit = z.infer<typeof RunAudit>;
+
+/** How trainees fared on each step across runs of one guide version. */
+export const StepInsight = z.object({
+  index: z.number().int().nonnegative(),
+  /** Runs that reached this step. */
+  runs: z.number().int().nonnegative(),
+  /** Runs where the step passed on its first check, with no catch or closer request. */
+  firstTry: z.number().int().nonnegative(),
+  caught: z.number().int().nonnegative(),
+  closerRequests: z.number().int().nonnegative(),
+  unverified: z.number().int().nonnegative(),
+  /** Enough runs struggled here that the author should look at the step. */
+  flagged: z.boolean(),
+});
+export type StepInsight = z.infer<typeof StepInsight>;
+
+export const GuideInsights = z.object({
+  guideVersion: z.number().int().positive(),
+  runs: z.number().int().nonnegative(),
+  completed: z.number().int().nonnegative(),
+  steps: z.array(StepInsight),
+});
+export type GuideInsights = z.infer<typeof GuideInsights>;
