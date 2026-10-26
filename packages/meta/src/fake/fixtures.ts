@@ -28,6 +28,11 @@ export const JudgeCase = z.enum(["correct", "skipped", "earlier"]);
 export type JudgeCase = z.infer<typeof JudgeCase>;
 
 const RunAFile = z.object({
+  summary: z.object({
+    total: z.number().int().positive(),
+    input_tokens: z.number().int().nonnegative(),
+    output_tokens: z.number().int().nonnegative(),
+  }),
   rows: z.array(
     z.object({
       step: z.number().int().positive(),
@@ -72,6 +77,8 @@ export interface JobFixture {
   /** Concepts SAM 3.1 tracked through the source, with frames hit and distinct ids. */
   samConcepts: Record<string, { framesWithHits: number; distinctIds: number[] }>;
   judgements: RecordedJudgement[];
+  /** Muse Spark token usage across run A's judge calls, for cost per judgement. */
+  judgeUsage: { calls: number; inputTokens: number; outputTokens: number };
   finishChecks: RecordedFinishCheck[];
 }
 
@@ -120,6 +127,11 @@ export async function loadJobFixture(
       confidence: r.confidence,
       evidence: r.evidence,
     })),
+    judgeUsage: {
+      calls: runA.summary.total,
+      inputTokens: runA.summary.input_tokens,
+      outputTokens: runA.summary.output_tokens,
+    },
     finishChecks: runB,
   };
 }

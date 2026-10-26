@@ -52,6 +52,21 @@ importers:
         specifier: ^3.23.8
         version: 3.25.76
 
+  packages/eval:
+    dependencies:
+      '@apprentice/coach':
+        specifier: workspace:*
+        version: link:../coach
+      '@apprentice/core':
+        specifier: workspace:*
+        version: link:../core
+      '@apprentice/meta':
+        specifier: workspace:*
+        version: link:../meta
+      zod:
+        specifier: ^3.23.8
+        version: 3.25.76
+
   packages/meta:
     dependencies:
       '@apprentice/core':
