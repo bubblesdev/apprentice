@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.turbo/
+.env
+.env.*
+!.env.example
+samples/
+spike/out/
+*.mp4
+*.webm
+__pycache__/
+.DS_Store
+*.log
