@@ -212,6 +212,8 @@ export function createApp(deps: AppDeps, app: Hono = new Hono()): Hono {
 
   app.get("/sessions/:id/report", (c) => c.json(deps.coach.report(c.req.param("id"))));
 
+  app.get("/sessions/:id/audit", async (c) => c.json(await deps.coach.audit(c.req.param("id"))));
+
   app.post("/sessions/:id/events", async (c) => {
     const req = await body(c, ClientCoachEvent);
     if (req instanceof Response) return req;

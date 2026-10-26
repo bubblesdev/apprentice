@@ -48,6 +48,7 @@ Development: `pnpm install`, then `pnpm check` (lint, typecheck, tests). Set `TE
 - **26 Oct 2026:** PDF and help-page import: text extracted on the server (unpdf for PDFs, Readability for help pages) before drafting; an SSRF guard refuses links that resolve to private or local addresses, checked on every redirect; the worker now ingests links too.
 - **26 Oct 2026:** Muse Image step diagrams: `MuseIllustrator` (prompted with the step, its parts and the expert's finished frame), a fifth pipeline stage that stores one diagram per step (a failed diagram never fails the guide), a Photo/Diagram toggle on the Guide screen, and a clearly labelled placeholder in fake mode.
 - **26 Oct 2026:** voice questions: the coach's mic opens Ask about this step (tap to talk or type); the browser records and encodes 16 kHz mono WAV, Muse Voice Transcribe turns it into text, Muse Spark answers in two short sentences while looking at the trainee's latest frame; transcripts cached and metered per second.
+- **26 Oct 2026:** Muse Wonder: a safety review stage reads the whole guide and sets each step's level and note (the more severe of draft and review wins; a stop step needs acknowledging in the coach), and an audit of every finished run (summary, steps worth a second look, wording suggestions for the author) shown on the report. A labelled rule-based fallback stands in without credits.
 
 ## Running the spike
 

@@ -28,7 +28,7 @@ export function BuildingScreen() {
       pollMs: 1000,
       stopWhen: (s) =>
         Boolean(s?.error) ||
-        s?.stages.some((x) => x.stage === "draw_diagrams" && x.state !== "running") === true,
+        s?.stages.some((x) => x.stage === "review_safety" && x.state !== "running") === true,
     },
   );
 

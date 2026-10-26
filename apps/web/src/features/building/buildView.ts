@@ -49,6 +49,12 @@ const STAGES: {
     detail: "One clean diagram per step",
     model: "Muse Image",
   },
+  {
+    stage: "review_safety",
+    label: "Safety check",
+    detail: "Every step reviewed for hazards",
+    model: "Muse Wonder",
+  },
 ];
 
 export type BuildPhase = "building" | "ready" | "failed";

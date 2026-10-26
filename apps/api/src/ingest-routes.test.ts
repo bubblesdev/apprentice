@@ -110,7 +110,14 @@ describe("build progress and media", () => {
     const { app } = await runtime();
     const res = await app.request("/guides/ps1-buttons/build");
     const status = BuildStatus.parse(await res.json());
-    expect(status.stages.map((s) => s.state)).toEqual(["done", "done", "done", "done", "done"]);
+    expect(status.stages.map((s) => s.state)).toEqual([
+      "done",
+      "done",
+      "done",
+      "done",
+      "done",
+      "done",
+    ]);
     expect((await app.request("/guides/unknown/build")).status).toBe(404);
   });
 

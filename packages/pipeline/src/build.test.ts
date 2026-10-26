@@ -4,12 +4,14 @@ import {
   FakeIllustrator,
   FakeReasoner,
   FakeSegmenter,
+  RulesAuditor,
   loadJobFixture,
   type JobFixture,
 } from "@apprentice/meta/fake";
 import { beforeAll, describe, expect, it } from "vitest";
 import { buildGuide, type PipelineProgress } from "./build.js";
 import { MemoryArtifactStore } from "./stage.js";
+import { mergeSafety } from "./stages/safety.js";
 
 let fixture: JobFixture;
 beforeAll(async () => {
@@ -134,6 +136,7 @@ describe("buildGuide on the recorded PS1 job", () => {
       "refine_boundaries",
       "ground_parts",
       "draw_diagrams",
+      "review_safety",
     ]);
   });
 
@@ -170,5 +173,46 @@ describe("buildGuide on the recorded PS1 job", () => {
     );
     expect(guide.steps.at(-1)?.diagramKey).toBeUndefined();
     expect(guide.steps[0]?.diagramKey).toBeDefined();
+  });
+
+  it("has Muse Wonder (here the rules fallback) review safety; the more severe level wins", async () => {
+    const { guide } = await buildGuide(
+      input(),
+      { ...deps(), auditor: new RulesAuditor() },
+      { store: new MemoryArtifactStore() },
+    );
+    // Step 1's warning says to unplug the console: a stop that the trainee must acknowledge.
+    expect(guide.steps[0]?.safety).toEqual({
+      level: "stop",
+      note: "Unplug power and remove disc and cables before handling",
+    });
+    expect(guide.steps.every((s) => s.safety.level !== "none")).toBe(true);
+  });
+
+  it("keeps the draft's warnings when the safety review fails", async () => {
+    const auditor = new RulesAuditor();
+    auditor.reviewSafety = async () => Promise.reject(new Error("Wonder unavailable"));
+    const progress: PipelineProgress[] = [];
+    const { guide } = await buildGuide(
+      input(),
+      { ...deps(), auditor },
+      { store: new MemoryArtifactStore(), onProgress: (p) => progress.push(p) },
+    );
+    expect(guide.steps[0]?.safety.level).toBe("caution");
+    expect(progress.at(-1)).toMatchObject({ stage: "review_safety", state: "skipped" });
+  });
+});
+
+describe("mergeSafety", () => {
+  it("takes the more severe level and the review's note", () => {
+    expect(mergeSafety({ level: "caution", note: "a" }, { level: "stop", note: "b" })).toEqual({
+      level: "stop",
+      note: "b",
+    });
+    expect(mergeSafety({ level: "stop", note: "a" }, { level: "none" })).toEqual({
+      level: "stop",
+      note: "a",
+    });
+    expect(mergeSafety({ level: "none" }, undefined)).toEqual({ level: "none" });
   });
 });

@@ -1,4 +1,10 @@
-import type { Illustrator, Segmenter, Transcriber, VisionReasoner } from "@apprentice/core";
+import type {
+  Auditor,
+  Illustrator,
+  Segmenter,
+  Transcriber,
+  VisionReasoner,
+} from "@apprentice/core";
 import { z } from "zod";
 import { CachedMetaApi, FileResponseCache } from "./cache.js";
 import { DEFAULT_BASE_URL, MetaClient } from "./client.js";
@@ -7,10 +13,12 @@ import {
   FakeReasoner,
   FakeSegmenter,
   FakeTranscriber,
+  RulesAuditor,
   loadJobFixture,
 } from "./fake/index.js";
 import { MuseIllustrator } from "./illustrator.js";
 import { MuseTranscriber } from "./transcriber.js";
+import { WonderAuditor } from "./wonder.js";
 import type { CostMeter } from "./meter.js";
 import { RetryingMetaApi } from "./retry.js";
 import { SamSegmenter } from "./sam-segmenter.js";
@@ -47,6 +55,7 @@ export interface MetaAdapters {
   segmenter: Segmenter;
   illustrator: Illustrator;
   transcriber: Transcriber;
+  auditor: Auditor;
 }
 
 export interface CreateAdaptersOptions {
@@ -75,6 +84,7 @@ export async function createMetaAdapters(options: CreateAdaptersOptions): Promis
       segmenter: new FakeSegmenter(fixture),
       illustrator: new FakeIllustrator(),
       transcriber: new FakeTranscriber(),
+      auditor: new RulesAuditor(),
     };
   }
 
@@ -93,5 +103,6 @@ export async function createMetaAdapters(options: CreateAdaptersOptions): Promis
     segmenter: new SamSegmenter(deps),
     illustrator: new MuseIllustrator(deps),
     transcriber: new MuseTranscriber(deps),
+    auditor: new WonderAuditor(deps),
   };
 }
