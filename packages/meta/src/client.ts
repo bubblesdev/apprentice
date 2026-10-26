@@ -25,6 +25,18 @@ export interface ResponseResult {
   text: string;
   inputTokens: number;
   outputTokens: number;
+  /** Set by the response cache when the result was replayed instead of paid for. */
+  cached?: boolean;
+}
+
+/** The Responses endpoint, as the adapters see it. Cache, retry and fakes implement it too. */
+export interface ResponsesApi {
+  createResponse(body: Record<string, unknown>): Promise<ResponseResult>;
+}
+
+/** The Files endpoint: upload once, then refer to the file by id. */
+export interface FilesApi {
+  uploadFile(data: Uint8Array, filename: string, mime: string): Promise<string>;
 }
 
 export class MetaApiError extends Error {
@@ -38,7 +50,7 @@ export class MetaApiError extends Error {
 }
 
 /** Thin, typed client for the Responses and Files endpoints. The key is never logged. */
-export class MetaClient {
+export class MetaClient implements ResponsesApi, FilesApi {
   private readonly baseUrl: string;
   private readonly fetchImpl: typeof fetch;
   private readonly timeoutMs: number;

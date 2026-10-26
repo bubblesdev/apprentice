@@ -21,7 +21,7 @@ Hands-on know-how lives in a few experts' heads: servicing equipment, assembly, 
 | Path            | What it is                                                                                       |
 | --------------- | ------------------------------------------------------------------------------------------------ |
 | `packages/core` | Domain model and zod schemas (Guide, Step, Session, Verdict) and the ports the domain depends on |
-| `packages/meta` | Meta Model API client, SAM 3.1 output parser, pricing and cost metering                          |
+| `packages/meta` | Muse Spark and SAM 3.1 adapters, request-hash cache, retries, cost meter, fixture-backed fakes   |
 | `apps/`         | Web app, API and worker (next)                                                                   |
 | `docs/`         | Architecture, decisions, plan and project context                                                |
 | `spike/`        | Day-1 feasibility experiments (Python) and their results                                         |
@@ -31,6 +31,7 @@ Development: `pnpm install`, then `pnpm check` (lint, typecheck, tests).
 ## Built during the hackathon (log)
 
 - **26 Oct 2026:** idea; spike 1 (SAM 3.1 tracking + Muse Spark step split on a real repair video); spike 2 (per-step check); clickable UI prototype; architecture and decisions; monorepo scaffold with `core` and `meta` packages, tests and CI.
+- **26 Oct 2026:** `meta` adapters: Muse Spark reasoner (step draft, boundary refinement, strict-instructor step judge), SAM 3.1 segmenter, request-hash response cache (each real call paid once), retries, per-scope cost meter with a hard cap, and fakes that replay the recorded spike outputs.
 
 ## Running the spike
 

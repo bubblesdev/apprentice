@@ -40,11 +40,16 @@ Apprentice turns instructions (a video, a manual, a help doc) into a verified st
 
 ## Ports (interfaces the domain depends on)
 
-- `VisionReasoner`: steps from a video/doc; judge a step from frames.
+- `VisionReasoner`: draft steps from a video or document; refine a step's end time from dense frames; judge a live step against the expert's reference frames.
 - `Segmenter`: track or locate concepts in a video clip or image.
 - `Transcriber`: speech to text, file and realtime.
 - `Illustrator`: step diagram from reference frames.
-- `MediaStore`, `JobQueue`, `Clock`: infrastructure.
+- `FrameExtractor`: still frames from a source video at given times.
+- `GuideRepository`, `SessionRepository`, `JobQueue`, `Clock`: infrastructure (in-memory versions in `core` for tests and single-process development).
+
+## Meta adapters and credits
+
+`packages/meta` implements the ports on Muse Spark (`SparkReasoner`) and SAM 3.1 (`SamSegmenter`). The live client is wrapped as `CachedMetaApi(RetryingMetaApi(MetaClient))`: every distinct request is hashed, paid for once and replayed after. A `CostMeter` per guide, session or eval run records each call (cache hits at zero cost) and enforces a hard cap. `APPRENTICE_ADAPTERS` selects `live`, `replay` (recordings only) or `fake` (fixtures/ from the spikes); see ADR 0006.
 
 ## Coach state machine
 
@@ -72,3 +77,4 @@ Strict TypeScript, ESLint + Prettier, Vitest unit tests per package, Playwright 
 - ADR 0003: Model proposes, deterministic policy decides.
 - ADR 0004: PWA first; native iOS (glassy, Liquid Glass style) and Android shells reuse core, coach and design tokens later.
 - ADR 0005: Postgres + pg-boss for jobs; R2 for media; Fly.io for api and worker.
+- ADR 0006: Request-hash cache and adapter modes (live, replay, fake).

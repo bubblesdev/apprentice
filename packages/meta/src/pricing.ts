@@ -1,3 +1,5 @@
+import type { Usage } from "@apprentice/core";
+
 /**
  * Meta Model API prices in US dollars (dev.meta.ai/docs/pricing-rate-limits, read 26 Oct 2026).
  * Used to meter every call against a guide or session budget.
@@ -22,4 +24,23 @@ export function tokenCost(model: string, inputTokens: number, outputTokens: numb
 
 export function samVideoCost(frames: number): number {
   return Math.max(frames, SAM_VIDEO_MIN_FRAMES) * SAM_VIDEO_PRICE_PER_FRAME;
+}
+
+/** Dollar cost of one call's billable units. Throws for a token model with no known price. */
+export function usageCost(usage: Usage): number {
+  switch (usage.unit) {
+    case "tokens":
+      return tokenCost(usage.model, usage.inputTokens, usage.outputTokens);
+    case "sam_images":
+      return usage.images * SAM_IMAGE_PRICE;
+    case "sam_video_frames":
+      return samVideoCost(usage.frames);
+    case "images": {
+      const price = IMAGE_PRICE_PER_IMAGE[usage.model];
+      if (price === undefined) throw new Error(`No price for model ${usage.model}`);
+      return usage.images * price;
+    }
+    case "audio_seconds":
+      return usage.seconds * TRANSCRIBE_PRICE_PER_SECOND;
+  }
 }
