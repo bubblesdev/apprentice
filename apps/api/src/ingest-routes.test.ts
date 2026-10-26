@@ -38,6 +38,17 @@ describe("uploads", () => {
     expect(existsSync(fileURLToPath(json.media.url))).toBe(true);
   });
 
+  it("accepts a PDF manual", async () => {
+    const { app } = await runtime();
+    const res = await app.request("/uploads", {
+      method: "POST",
+      body: new TextEncoder().encode("%PDF-1.4"),
+      headers: { "Content-Type": "application/pdf" },
+    });
+    expect(res.status).toBe(201);
+    expect(((await res.json()) as { media: { url: string } }).media.url).toMatch(/\.pdf$/);
+  });
+
   it("refuses other file types and files over the cap", async () => {
     const { app } = await runtime();
     const html = await app.request("/uploads", {

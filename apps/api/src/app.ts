@@ -42,7 +42,7 @@ export interface AppDeps {
 
 const STATUS = { not_found: 404, not_ready: 409, invalid_event: 409 } as const;
 
-const VIDEO_TYPES = new Set(["video/mp4", "video/quicktime", "video/webm"]);
+const UPLOAD_TYPES = new Set(["video/mp4", "video/quicktime", "video/webm", "application/pdf"]);
 
 /**
  * Media a client may point a build at. Local files are allowed only inside the uploads directory,
@@ -114,10 +114,11 @@ export function createApp(deps: AppDeps, app: Hono = new Hono()): Hono {
     });
   });
 
-  /** Upload a source video. The body is the raw file; it is stored under a hash of its content. */
+  /** Upload a source video or PDF manual. The body is the raw file; it is stored under a hash of its content. */
   app.post("/uploads", async (c) => {
     const mime = (c.req.header("content-type") ?? "").split(";")[0]?.trim() ?? "";
-    if (!VIDEO_TYPES.has(mime)) return c.json({ error: "Upload an MP4, MOV or WebM video" }, 415);
+    if (!UPLOAD_TYPES.has(mime))
+      return c.json({ error: "Upload an MP4, MOV or WebM video, or a PDF" }, 415);
     const stream = c.req.raw.body;
     if (!stream) return c.json({ error: "The file is empty" }, 400);
     try {

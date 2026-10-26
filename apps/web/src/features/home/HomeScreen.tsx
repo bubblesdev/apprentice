@@ -95,6 +95,8 @@ export function HomeScreen() {
   const [pending, setPending] = useState<Pending>();
   const dropFile = useCallback(async (file: File) => {
     if (file.type.startsWith("video/")) setPending({ choice: "video", file });
+    else if (file.type === "application/pdf" || /\.pdf$/i.test(file.name))
+      setPending({ choice: "manual", file });
     else if (/\.(md|markdown|txt)$/i.test(file.name) || file.type.startsWith("text/")) {
       setPending({ choice: "manual", file, text: await file.text() });
     }

@@ -9,3 +9,5 @@ export * from "./stages/references.js";
 export * from "./job.js";
 export * from "./ffmpeg.js";
 export * from "./ingest.js";
+export * from "./documents.js";
+export * from "./safe-fetch.js";

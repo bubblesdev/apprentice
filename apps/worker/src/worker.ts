@@ -1,3 +1,4 @@
+import { resolve } from "node:path";
 import type { FrameExtractor, GuideRepository, UsageEvent } from "@apprentice/core";
 import { CostMeter, createMetaAdapters } from "@apprentice/meta";
 import { FakeFrameExtractor } from "@apprentice/meta/fake";
@@ -5,6 +6,8 @@ import {
   BUILD_GUIDE_JOB,
   FfmpegFrameExtractor,
   buildGuideHandler,
+  ingestDocument,
+  ingestRemoteVideo,
   type ArtifactStore,
 } from "@apprentice/pipeline";
 import type { WorkerEnv } from "./env.js";
@@ -38,6 +41,13 @@ export async function createHandlers(deps: WorkerDeps) {
         guides: deps.guides,
         store: deps.artifacts,
         frames,
+        prepare: async (p) =>
+          ingestDocument(
+            await ingestRemoteVideo(p, {
+              dir: resolve(env.UPLOAD_DIR),
+              maxBytes: env.UPLOAD_MAX_MB * 1e6,
+            }),
+          ),
         adaptersFor: (guideId) =>
           adapters(
             new CostMeter({

@@ -24,4 +24,6 @@ Logic lives in pure view models (`buildView`, `coachView`, `reportView`) with un
 
 The Guide screen's Edit mode renames, rewords, reorders and deletes steps (each keeps its expert frames and parts) and saves a new draft version; Approve marks it ready.
 
-Not built yet: PDF and help-page import, spoken questions (Voice Transcribe), step diagrams (Muse Image).
+Manual accepts pasted text, a PDF, Markdown or text file, or a link to a help page; the server extracts the text.
+
+Not built yet: spoken questions (Voice Transcribe), step diagrams (Muse Image).
