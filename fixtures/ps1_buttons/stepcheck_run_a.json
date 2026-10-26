@@ -1,0 +1,224 @@
+{
+  "summary": {
+    "passed": 9,
+    "total": 21,
+    "input_tokens": 42717,
+    "output_tokens": 33493,
+    "est_cost_usd": 0.196,
+    "correct": "2/7",
+    "skipped": "1/7",
+    "earlier": "6/7"
+  },
+  "rows": [
+    {
+      "step": 3,
+      "title": "Isolate top cover and remove Power button cap",
+      "case": "correct",
+      "expected": "done",
+      "verdict": "done",
+      "confidence": 0.88,
+      "evidence": "The trainee's isolated top-cover underside shows the bottom-right round Power hole open and empty matching the expert's cap-removed state.",
+      "pass": true
+    },
+    {
+      "step": 3,
+      "title": "Isolate top cover and remove Power button cap",
+      "case": "skipped",
+      "expected": "skipped",
+      "verdict": "done",
+      "confidence": 0.95,
+      "evidence": "Trainee holds the round Power cap popped free from the underside of the top cover matching the expert end state.",
+      "pass": false
+    },
+    {
+      "step": 3,
+      "title": "Isolate top cover and remove Power button cap",
+      "case": "earlier",
+      "expected": "not_yet",
+      "verdict": "not_yet",
+      "confidence": 0.95,
+      "evidence": "Trainee shows fully assembled console with Power button still installed instead of isolated top cover with cap removed.",
+      "pass": true
+    },
+    {
+      "step": 4,
+      "title": "Inspect Power button and apply silicone grease",
+      "case": "correct",
+      "expected": "done",
+      "verdict": "wrong",
+      "confidence": 0.92,
+      "evidence": "Trainee's button shows a thick opaque white blob of grease instead of a thin clear film on the side rub tabs and center spring post.",
+      "pass": false
+    },
+    {
+      "step": 4,
+      "title": "Inspect Power button and apply silicone grease",
+      "case": "skipped",
+      "expected": "skipped",
+      "verdict": "not_yet",
+      "confidence": 0.9,
+      "evidence": "Trainee is still squeezing white grease onto the center spring post and has not yet spread and wiped it to a thin clear film.",
+      "pass": false
+    },
+    {
+      "step": 4,
+      "title": "Inspect Power button and apply silicone grease",
+      "case": "earlier",
+      "expected": "not_yet",
+      "verdict": "not_yet",
+      "confidence": 0.9,
+      "evidence": "Trainee shows assembled shell then open top cover with power mechanism still seated and no grease film or silicone tube visible.",
+      "pass": true
+    },
+    {
+      "step": 5,
+      "title": "Reinstall spring and Power button cap",
+      "case": "correct",
+      "expected": "done",
+      "verdict": "done",
+      "confidence": 0.88,
+      "evidence": "Trainee holds the Power button cap underside and applies from the white tube to the center post exactly as the expert does.",
+      "pass": true
+    },
+    {
+      "step": 5,
+      "title": "Reinstall spring and Power button cap",
+      "case": "skipped",
+      "expected": "skipped",
+      "verdict": "not_yet",
+      "confidence": 0.9,
+      "evidence": "Trainee close-up shows the center post empty with no spring or Power button cap installed.",
+      "pass": false
+    },
+    {
+      "step": 5,
+      "title": "Reinstall spring and Power button cap",
+      "case": "earlier",
+      "expected": "not_yet",
+      "verdict": "not_yet",
+      "confidence": 0.9,
+      "evidence": "Trainee top cover shows empty button recess while the Power button cap is still held loose in the hand, not seated on the post.",
+      "pass": true
+    },
+    {
+      "step": 6,
+      "title": "Remove Open slider assembly",
+      "case": "correct",
+      "expected": "done",
+      "verdict": "not_yet",
+      "confidence": 0.95,
+      "evidence": "Trainee image shows rectangular slider block still secured with two screws and spring in place, not lifted to reveal Open button post.",
+      "pass": false
+    },
+    {
+      "step": 6,
+      "title": "Remove Open slider assembly",
+      "case": "skipped",
+      "expected": "skipped",
+      "verdict": "done",
+      "confidence": 0.92,
+      "evidence": "Trainee holds the rectangular slider block lifted away from the housing, matching the removed assembly state.",
+      "pass": false
+    },
+    {
+      "step": 6,
+      "title": "Remove Open slider assembly",
+      "case": "earlier",
+      "expected": "not_yet",
+      "verdict": "not_yet",
+      "confidence": 0.85,
+      "evidence": "Trainee holds silicone grease and a small round part with no rectangular slider block, two screws, or exposed Open button post visible.",
+      "pass": true
+    },
+    {
+      "step": 7,
+      "title": "Lubricate Open slider wear surfaces",
+      "case": "correct",
+      "expected": "done",
+      "verdict": "not_yet",
+      "confidence": 0.85,
+      "evidence": "Trainee is handling dry slider plates with no grease tube or sheen visible.",
+      "pass": false
+    },
+    {
+      "step": 7,
+      "title": "Lubricate Open slider wear surfaces",
+      "case": "skipped",
+      "expected": "skipped",
+      "verdict": "done",
+      "confidence": 0.85,
+      "evidence": "Trainee applied silicone grease from tube and the gray plastic contact edge shows thin even sheen matching expert's lubricated slider.",
+      "pass": false
+    },
+    {
+      "step": 7,
+      "title": "Lubricate Open slider wear surfaces",
+      "case": "earlier",
+      "expected": "not_yet",
+      "verdict": "wrong",
+      "confidence": 0.92,
+      "evidence": "Trainee applies silicone grease to a round cap's center post instead of the flat rectangular Open slider plates shown by the expert.",
+      "pass": false
+    },
+    {
+      "step": 8,
+      "title": "Lubricate and reinstall Open button cap",
+      "case": "correct",
+      "expected": "done",
+      "verdict": "not_yet",
+      "confidence": 0.9,
+      "evidence": "Trainee is still applying grease to the Open cap in hand while the top-cover housing slot sits empty with no cap snapped in.",
+      "pass": false
+    },
+    {
+      "step": 8,
+      "title": "Lubricate and reinstall Open button cap",
+      "case": "skipped",
+      "expected": "skipped",
+      "verdict": "not_yet",
+      "confidence": 0.9,
+      "evidence": "Trainee is handling the rectangular slider housing with its spring on the top cover with no curved Open button cap snapped in, while expert shows greasing and fitting the curved cap.",
+      "pass": false
+    },
+    {
+      "step": 8,
+      "title": "Lubricate and reinstall Open button cap",
+      "case": "earlier",
+      "expected": "not_yet",
+      "verdict": "not_yet",
+      "confidence": 0.9,
+      "evidence": "trainee close-ups show the housing slide slots empty with no gray Open button cap snapped in",
+      "pass": true
+    },
+    {
+      "step": 9,
+      "title": "Reinstall slider assembly and secure screws",
+      "case": "correct",
+      "expected": "done",
+      "verdict": "not_yet",
+      "confidence": 0.9,
+      "evidence": "Trainee's slider is seated with spring hooked but both mounting holes are empty with no screws secured unlike the expert's snug screws.",
+      "pass": false
+    },
+    {
+      "step": 9,
+      "title": "Reinstall slider assembly and secure screws",
+      "case": "skipped",
+      "expected": "skipped",
+      "verdict": "skipped",
+      "confidence": 0.9,
+      "evidence": "Trainee shows only the closed PlayStation exterior pressing OPEN with no view of the slider seated in guides with spring hooked and both screws snug.",
+      "pass": true
+    },
+    {
+      "step": 9,
+      "title": "Reinstall slider assembly and secure screws",
+      "case": "earlier",
+      "expected": "not_yet",
+      "verdict": "not_yet",
+      "confidence": 0.95,
+      "evidence": "Trainee holds slider assembly in hand off the guides with no screws installed while expert shows it seated and screwed.",
+      "pass": true
+    }
+  ]
+}
