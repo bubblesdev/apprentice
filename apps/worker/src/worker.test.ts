@@ -23,7 +23,11 @@ describe("worker handlers", () => {
     const guides = new InMemoryGuideRepository();
     const usage: UsageEvent[] = [];
     const { mode, handlers } = await createHandlers({
-      env: WorkerEnv.parse({ DATABASE_URL: "postgres://unused", APPRENTICE_ADAPTERS: "fake" }),
+      env: WorkerEnv.parse({
+        DATABASE_URL: "postgres://unused",
+        APPRENTICE_ADAPTERS: "fake",
+        MEDIA_STORE: "memory",
+      }),
       guides,
       artifacts: new MemoryArtifactStore(),
       recordUsage: (e) => usage.push(e),
@@ -45,7 +49,11 @@ describe.runIf(url)("worker on Postgres and pg-boss", () => {
     await pool.query("delete from guides where id = 'g1'");
     const guides = new PgGuideRepository(pool);
     const { handlers } = await createHandlers({
-      env: WorkerEnv.parse({ DATABASE_URL: url, APPRENTICE_ADAPTERS: "fake" }),
+      env: WorkerEnv.parse({
+        DATABASE_URL: url,
+        APPRENTICE_ADAPTERS: "fake",
+        MEDIA_STORE: "memory",
+      }),
       guides,
       artifacts: new MemoryArtifactStore(),
       recordUsage: () => undefined,

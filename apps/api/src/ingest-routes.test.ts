@@ -16,7 +16,13 @@ afterEach(async () => rm(dir, { recursive: true, force: true }));
 async function runtime(env: Record<string, string> = {}) {
   let n = 0;
   const rt = await createRuntime(
-    ApiEnv.parse({ APPRENTICE_ADAPTERS: "fake", UPLOAD_DIR: dir, UPLOAD_MAX_MB: "0.001", ...env }),
+    ApiEnv.parse({
+      APPRENTICE_ADAPTERS: "fake",
+      MEDIA_STORE: "memory",
+      UPLOAD_DIR: dir,
+      UPLOAD_MAX_MB: "0.001",
+      ...env,
+    }),
     { newId: () => `ing-${++n}` },
   );
   await rt.seed();

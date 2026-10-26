@@ -4,6 +4,7 @@ import {
   ClientMessage,
   CoachUpdate,
   Guide,
+  GuideInsights,
   RunAudit,
   RunReport,
   ServerMessage,
@@ -62,6 +63,7 @@ export const api = {
     request(`/guides/${encodeURIComponent(id)}`, Guide, { ...json(edit), method: "PATCH" }),
   approve: (id: string) =>
     request(`/guides/${encodeURIComponent(id)}/approve`, Guide, { method: "POST" }),
+  insights: (id: string) => request(`/guides/${encodeURIComponent(id)}/insights`, GuideInsights),
   build: (id: string) => request(`/guides/${encodeURIComponent(id)}/build`, BuildStatus),
   createGuide: (body: CreateGuideRequest) =>
     request("/guides", z.object({ guideId: z.string(), jobId: z.string() }), json(body)),

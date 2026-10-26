@@ -17,6 +17,7 @@ export interface GuideRepository {
 export interface SessionRepository {
   get(id: string): Promise<Session | undefined>;
   put(session: Session): Promise<void>;
+  listByGuide(guideId: string): Promise<Session[]>;
 }
 
 export interface JobQueue {
@@ -55,6 +56,10 @@ export class InMemorySessionRepository implements SessionRepository {
 
   async put(session: Session): Promise<void> {
     this.sessions.set(session.id, session);
+  }
+
+  async listByGuide(guideId: string): Promise<Session[]> {
+    return [...this.sessions.values()].filter((s) => s.guideId === guideId);
   }
 }
 

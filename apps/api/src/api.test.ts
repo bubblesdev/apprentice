@@ -1,5 +1,5 @@
 import type { AddressInfo } from "node:net";
-import { CoachUpdate, ServerMessage } from "@apprentice/core";
+import { CoachUpdate, GuideInsights, ServerMessage } from "@apprentice/core";
 import { serve } from "@hono/node-server";
 import { describe, expect, it } from "vitest";
 import WebSocket from "ws";
@@ -10,9 +10,12 @@ const frames = { frames: [{ mime: "image/jpeg", data: JPEG }] };
 
 let ids = 0;
 async function runtime(env: Record<string, string> = {}) {
-  const rt = await createRuntime(ApiEnv.parse({ APPRENTICE_ADAPTERS: "fake", ...env }), {
-    newId: () => `id-${++ids}`,
-  });
+  const rt = await createRuntime(
+    ApiEnv.parse({ APPRENTICE_ADAPTERS: "fake", MEDIA_STORE: "memory", ...env }),
+    {
+      newId: () => `id-${++ids}`,
+    },
+  );
   await rt.seed();
   await rt.queue.idle();
   return rt;
@@ -130,9 +133,12 @@ describe("live sessions over HTTP", () => {
   });
 
   it("does not start a session on a guide that is still building", async () => {
-    const rt = await createRuntime(ApiEnv.parse({ APPRENTICE_ADAPTERS: "fake" }), {
-      newId: () => `b-${++ids}`,
-    });
+    const rt = await createRuntime(
+      ApiEnv.parse({ APPRENTICE_ADAPTERS: "fake", MEDIA_STORE: "memory" }),
+      {
+        newId: () => `b-${++ids}`,
+      },
+    );
     await rt.seed();
     expect((await call(rt.app, "POST", "/sessions", { guideId: "ps1-buttons" })).status).toBe(409);
     await rt.queue.idle();
@@ -181,6 +187,7 @@ describe.runIf(databaseUrl)("API on Postgres", () => {
     const rt = await createRuntime(
       ApiEnv.parse({
         APPRENTICE_ADAPTERS: "fake",
+        MEDIA_STORE: "memory",
         DATABASE_URL: databaseUrl,
         SEED_FIXTURE_GUIDE: "false",
       }),
@@ -288,5 +295,26 @@ describe("run audit", () => {
     const audit = await call(app, "GET", `/sessions/${id}/audit`);
     expect(audit.status).toBe(200);
     expect(audit.json).toMatchObject({ source: "rules", concerns: [{ stepIndex: 0 }] });
+  });
+});
+
+describe("guide insights", () => {
+  it("counts runs per step for the current version", async () => {
+    const { app } = await runtime({ APPRENTICE_FAKE_JUDGE: "pass" });
+    for (let i = 0; i < 3; i++) {
+      const id = CoachUpdate.parse(
+        (await call(app, "POST", "/sessions", { guideId: "ps1-buttons" })).json,
+      ).session.id;
+      await event(app, id, "begin");
+      await event(app, id, "check");
+      await call(app, "POST", `/sessions/${id}/frames`, frames);
+      await call(app, "POST", `/sessions/${id}/frames`, frames);
+      await event(app, id, "end");
+    }
+    const res = await call(app, "GET", "/guides/ps1-buttons/insights");
+    const insights = GuideInsights.parse(res.json);
+    expect(insights).toMatchObject({ runs: 3, completed: 0 });
+    expect(insights.steps[0]).toMatchObject({ index: 0, runs: 3, firstTry: 3, flagged: false });
+    expect(insights.steps[1]?.runs).toBe(0);
   });
 });

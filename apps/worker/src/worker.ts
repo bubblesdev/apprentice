@@ -10,6 +10,7 @@ import {
   ingestRemoteVideo,
   type ArtifactStore,
 } from "@apprentice/pipeline";
+import { mediaStoreFromEnv } from "@apprentice/store";
 import type { WorkerEnv } from "./env.js";
 
 export interface WorkerDeps {
@@ -41,6 +42,7 @@ export async function createHandlers(deps: WorkerDeps) {
         guides: deps.guides,
         store: deps.artifacts,
         frames,
+        media: mediaStoreFromEnv(env),
         prepare: async (p) =>
           ingestDocument(
             await ingestRemoteVideo(p, {

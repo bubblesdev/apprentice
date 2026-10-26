@@ -283,3 +283,14 @@
   border-radius: 14px;
   background: var(--color-surface-raised);
 }
+
+.struggle {
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: rgba(242, 182, 90, 0.12);
+  color: var(--color-amber-soft);
+  font-size: 11px;
+  font-weight: 600;
+}

@@ -45,6 +45,7 @@ export const MIGRATIONS = [
      doc jsonb not null,
      at timestamptz not null)`,
   `create index if not exists usage_events_scope on usage_events (scope_kind, scope_id)`,
+  `create index if not exists sessions_guide on sessions (guide_id)`,
   `create table if not exists guide_builds (
      guide_id text primary key,
      doc jsonb not null,
@@ -99,6 +100,14 @@ export class PgSessionRepository implements SessionRepository {
        on conflict (id) do update set doc = excluded.doc, updated_at = now()`,
       [session.id, session.guideId, JSON.stringify(Session.parse(session))],
     );
+  }
+
+  async listByGuide(guideId: string): Promise<Session[]> {
+    const { rows } = await this.sql.query<{ doc: unknown }>(
+      "select doc from sessions where guide_id = $1 order by updated_at",
+      [guideId],
+    );
+    return rows.map((r) => Session.parse(r.doc));
   }
 }
 

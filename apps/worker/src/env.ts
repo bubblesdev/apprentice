@@ -1,7 +1,8 @@
 import { MetaEnv } from "@apprentice/meta";
+import { MediaEnv } from "@apprentice/store";
 import { z } from "zod";
 
-export const WorkerEnv = MetaEnv.extend({
+export const WorkerEnv = MetaEnv.merge(MediaEnv).extend({
   DATABASE_URL: z.string().min(1),
   /** Hard cap on Meta spend per guide build. */
   GUIDE_BUDGET_USD: z.coerce.number().positive().default(1.5),
