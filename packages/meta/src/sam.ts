@@ -33,23 +33,37 @@ function toBox(f: Record<string, number>): Box | null {
   };
 }
 
+function parseRecords(text: string): Detection[] {
+  const detections: Detection[] = [];
+  for (const rec of text.matchAll(RECORD)) {
+    const fields = parseFields(rec[2] ?? "");
+    const box = toBox(fields);
+    if (!box) continue;
+    detections.push({
+      objectId: Number(rec[1]),
+      box,
+      ...(fields.c === undefined ? {} : { confidence: fields.c }),
+    });
+  }
+  return detections;
+}
+
 export function parseSamOutput(text: string): Map<number, Detection[]> {
   const frames = new Map<number, Detection[]>();
   for (const raw of text.split("\n")) {
     const line = FRAME.exec(raw.trim());
     if (!line) continue;
-    const detections: Detection[] = [];
-    for (const rec of (line[2] ?? "").matchAll(RECORD)) {
-      const fields = parseFields(rec[2] ?? "");
-      const box = toBox(fields);
-      if (!box) continue;
-      detections.push({
-        objectId: Number(rec[1]),
-        box,
-        ...(fields.c === undefined ? {} : { confidence: fields.c }),
-      });
-    }
-    frames.set(Number(line[1]), detections);
+    frames.set(Number(line[1]), parseRecords(line[2] ?? ""));
   }
   return frames;
+}
+
+/**
+ * Detections for a single image. Image results may come with a `<0f>` frame prefix or as bare
+ * records; both are accepted, and records from every line are merged.
+ */
+export function parseSamImageOutput(text: string): Detection[] {
+  const frames = parseSamOutput(text);
+  if (frames.size > 0) return [...frames.values()].flat();
+  return parseRecords(text);
 }
