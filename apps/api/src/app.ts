@@ -1,6 +1,7 @@
 import { resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
+  AskRequest,
   ClientMessage,
   CreateGuideRequest,
   CreateSessionRequest,
@@ -40,7 +41,7 @@ export interface AppDeps {
   upgradeWebSocket?: UpgradeWebSocket;
 }
 
-const STATUS = { not_found: 404, not_ready: 409, invalid_event: 409 } as const;
+const STATUS = { not_found: 404, not_ready: 409, invalid_event: 409, unheard: 422 } as const;
 
 const UPLOAD_TYPES = new Set(["video/mp4", "video/quicktime", "video/webm", "application/pdf"]);
 
@@ -215,6 +216,21 @@ export function createApp(deps: AppDeps, app: Hono = new Hono()): Hono {
     const req = await body(c, ClientCoachEvent);
     if (req instanceof Response) return req;
     return c.json(await deps.coach.dispatch(c.req.param("id"), req));
+  });
+
+  app.post("/sessions/:id/ask", async (c) => {
+    const req = await body(c, AskRequest);
+    if (req instanceof Response) return req;
+    const question = req.audio
+      ? {
+          audio: {
+            kind: "bytes" as const,
+            mime: req.audio.mime,
+            data: new Uint8Array(Buffer.from(req.audio.data, "base64")),
+          },
+        }
+      : { text: req.text ?? "" };
+    return c.json(await deps.coach.ask(c.req.param("id"), question));
   });
 
   /** HTTP fallback for networks that block WebSockets. */

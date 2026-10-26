@@ -13,3 +13,4 @@ export * from "./sam-segmenter.js";
 export * from "./spark.js";
 export * from "./spark-output.js";
 export * from "./illustrator.js";
+export * from "./transcriber.js";

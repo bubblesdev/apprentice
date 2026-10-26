@@ -11,6 +11,8 @@ import styles from "./Coach.module.css";
 import { CoachPanel } from "./CoachPanel";
 import { coachView } from "./coachView";
 import { useCoachSession } from "./useCoachSession";
+import { QuestionSheet } from "./QuestionSheet";
+import { useQuestion } from "./useQuestion";
 import { useSampler } from "./useSampler";
 
 const VOICE_KEY = "apprentice.voice";
@@ -44,6 +46,14 @@ export function CoachScreen() {
     });
   }, []);
   useSampler(videoRef, update, sendFrames, onCaptured);
+
+  const [asking, setAsking] = useState(false);
+  const voiceRef = useRef(voice);
+  voiceRef.current = voice;
+  const onAnswer = useCallback((answer: string) => {
+    if (voiceRef.current) speak(answer);
+  }, []);
+  const question = useQuestion(sessionId, onAnswer);
 
   const steps = guide.data?.steps ?? [];
   const view = update && steps.length ? coachView(update, steps) : undefined;
@@ -180,6 +190,7 @@ export function CoachScreen() {
               next: act("next"),
               acknowledge: act("acknowledge"),
               override: act("override"),
+              ask: () => setAsking(true),
             }}
           />
         ) : null}
@@ -189,6 +200,18 @@ export function CoachScreen() {
           </span>
         ) : null}
       </section>
+      <QuestionSheet
+        open={asking}
+        state={question.state}
+        onClose={() => {
+          question.stop();
+          question.reset();
+          setAsking(false);
+        }}
+        onRecord={() => void question.start()}
+        onStop={question.stop}
+        onAsk={(text) => void question.askText(text)}
+      />
     </div>
   );
 }

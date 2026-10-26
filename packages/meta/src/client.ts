@@ -91,6 +91,16 @@ export interface ResponsesApi {
   createResponse(body: Record<string, unknown>): Promise<ResponseResult>;
 }
 
+/** Speech to text (Voice Transcribe). */
+export interface TranscribeApi {
+  transcribe(input: {
+    model: string;
+    data: Uint8Array;
+    filename: string;
+    mime: string;
+  }): Promise<{ text: string; cached?: boolean }>;
+}
+
 /** The Files endpoint: upload once, then refer to the file by id. */
 export interface FilesApi {
   uploadFile(data: Uint8Array, filename: string, mime: string): Promise<string>;
@@ -107,7 +117,7 @@ export class MetaApiError extends Error {
 }
 
 /** Thin, typed client for the Responses and Files endpoints. The key is never logged. */
-export class MetaClient implements ResponsesApi, FilesApi {
+export class MetaClient implements ResponsesApi, FilesApi, TranscribeApi {
   private readonly baseUrl: string;
   private readonly fetchImpl: typeof fetch;
   private readonly timeoutMs: number;
@@ -158,5 +168,28 @@ export class MetaClient implements ResponsesApi, FilesApi {
     });
     if (!res.ok) throw new MetaApiError(res.status, await res.text());
     return z.object({ id: z.string() }).parse(await res.json()).id;
+  }
+
+  /**
+   * OpenAI-compatible transcription endpoint (multipart `file` + `model`), which Meta's
+   * OpenAI-SDK compatibility implies; confirm with the probe before the demo.
+   */
+  async transcribe(input: {
+    model: string;
+    data: Uint8Array;
+    filename: string;
+    mime: string;
+  }): Promise<{ text: string }> {
+    const form = new FormData();
+    form.append("model", input.model);
+    form.append("file", new Blob([input.data], { type: input.mime }), input.filename);
+    const res = await this.fetchImpl(`${this.baseUrl}/audio/transcriptions`, {
+      method: "POST",
+      headers: this.headers(),
+      body: form,
+      signal: AbortSignal.timeout(this.timeoutMs),
+    });
+    if (!res.ok) throw new MetaApiError(res.status, await res.text());
+    return z.object({ text: z.string() }).parse(await res.json());
   }
 }

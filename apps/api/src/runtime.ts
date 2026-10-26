@@ -22,7 +22,7 @@ import { createNodeWebSocket } from "@hono/node-ws";
 import { Hono } from "hono";
 import { z } from "zod";
 import { createApp } from "./app.js";
-import { CoachService, type ReferenceResolver } from "./coach-service.js";
+import { CoachService, type ReferenceResolver, type SessionAdapters } from "./coach-service.js";
 import { memoryPersistence, postgresPersistence } from "./persistence.js";
 
 export const ApiEnv = MetaEnv.extend({
@@ -98,7 +98,7 @@ export async function createRuntime(env: ApiEnv, options: RuntimeOptions = {}) {
     return Promise.all(step.referenceTimesS.map((t) => frames.frameAt(video, t)));
   };
 
-  const verifiers = new Map<string, Promise<StepVerifier>>();
+  const sessionAdapters = new Map<string, Promise<SessionAdapters>>();
   const coach = new CoachService({
     guides,
     sessions,
@@ -107,13 +107,17 @@ export async function createRuntime(env: ApiEnv, options: RuntimeOptions = {}) {
     clock,
     newId,
     references,
-    verifierFor: (sessionId) => {
-      const existing = verifiers.get(sessionId);
+    adaptersFor: (sessionId) => {
+      const existing = sessionAdapters.get(sessionId);
       if (existing) return existing;
       const created = adapters(
         meter({ kind: "session", id: sessionId }, env.SESSION_BUDGET_USD),
-      ).then(({ reasoner, segmenter }) => new StepVerifier({ reasoner, segmenter, policy }));
-      verifiers.set(sessionId, created);
+      ).then(({ reasoner, segmenter, transcriber }) => ({
+        verifier: new StepVerifier({ reasoner, segmenter, policy }),
+        reasoner,
+        transcriber,
+      }));
+      sessionAdapters.set(sessionId, created);
       return created;
     },
   });

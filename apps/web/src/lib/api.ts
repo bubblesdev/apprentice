@@ -1,10 +1,12 @@
 import {
+  AskResponse,
   BuildStatus,
   ClientMessage,
   CoachUpdate,
   Guide,
   RunReport,
   ServerMessage,
+  type AskRequest,
   type ClientCoachEvent,
   type CreateGuideRequest,
   type GuideEditRequest,
@@ -74,6 +76,8 @@ export const api = {
     request(`/sessions/${encodeURIComponent(id)}/events`, CoachUpdate, json(event)),
   frames: (id: string, frames: Extract<ClientMessage, { type: "frames" }>["frames"]) =>
     request(`/sessions/${encodeURIComponent(id)}/frames`, CoachUpdate, json({ frames })),
+  ask: (id: string, body: AskRequest) =>
+    request(`/sessions/${encodeURIComponent(id)}/ask`, AskResponse, json(body)),
   report: (id: string) => request(`/sessions/${encodeURIComponent(id)}/report`, RunReport),
 };
 

@@ -1,9 +1,12 @@
-import type { FilesApi, ResponseResult, ResponsesApi } from "../client.js";
+import type { FilesApi, ResponseResult, ResponsesApi, TranscribeApi } from "../client.js";
 
 /** Test double for the Meta API: replies in order and records every request body. */
-export class StubMetaApi implements ResponsesApi, FilesApi {
+export class StubMetaApi implements ResponsesApi, FilesApi, TranscribeApi {
   readonly bodies: Record<string, unknown>[] = [];
   readonly uploads: { filename: string; mime: string; bytes: number }[] = [];
+  readonly transcriptions: { model: string; mime: string; bytes: number }[] = [];
+  /** What `transcribe` returns. */
+  transcript = "";
 
   constructor(private readonly replies: (Partial<ResponseResult> & { text: string })[]) {}
 
@@ -17,5 +20,14 @@ export class StubMetaApi implements ResponsesApi, FilesApi {
   async uploadFile(data: Uint8Array, filename: string, mime: string): Promise<string> {
     this.uploads.push({ filename, mime, bytes: data.byteLength });
     return `file-${this.uploads.length}`;
+  }
+
+  async transcribe(input: { model: string; data: Uint8Array; filename: string; mime: string }) {
+    this.transcriptions.push({
+      model: input.model,
+      mime: input.mime,
+      bytes: input.data.byteLength,
+    });
+    return { text: this.transcript };
   }
 }

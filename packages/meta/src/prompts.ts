@@ -83,3 +83,16 @@ export function diagramPrompt(
     "text other than the part labels."
   );
 }
+
+/** A trainee asks about the current step while their hands are busy. */
+export function answerPrompt(step: StepBrief, question: string, hasFrame: boolean): string {
+  return (
+    "You are a calm, expert workshop instructor coaching a beginner through one step of a " +
+    `hands-on job. The current step is:\n${JSON.stringify(step)}\n` +
+    (hasFrame ? "The image shows the beginner's work right now. " : "") +
+    `The beginner asks: ${JSON.stringify(question)}\n` +
+    "Answer in at most two short sentences they can follow without looking away from the work. " +
+    "If what they describe or what you see is unsafe, tell them to stop first. If the question is " +
+    "not about this job, say you can only help with this step. Plain text only."
+  );
+}

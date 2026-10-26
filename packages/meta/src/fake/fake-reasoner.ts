@@ -10,7 +10,7 @@ import type {
 import { parseFixtureMedia } from "./fixture-media.js";
 import { JudgeCase, type JobFixture } from "./fixtures.js";
 
-export type FakeOperation = "draft_steps" | "refine_boundary" | "judge_step";
+export type FakeOperation = "draft_steps" | "refine_boundary" | "judge_step" | "answer_question";
 
 export interface FakeReasonerOptions {
   fixture: JobFixture;
@@ -74,5 +74,13 @@ export class FakeReasoner implements VisionReasoner {
       if (row) return { kind: row.verdict, confidence: row.confidence, sentence: row.evidence };
     }
     return NOT_RECORDED;
+  }
+
+  /** No recorded answers exist: says so, and points at the step's own "done when" text. */
+  async answer(input: { step: StepBrief; question: string }): Promise<{ answer: string }> {
+    this.calls.push("answer_question");
+    return {
+      answer: `Development mode, no model was called. This step is done when: ${input.step.doneWhen}`,
+    };
   }
 }

@@ -115,3 +115,19 @@ export const RunReport = z.object({
   steps: z.array(StepReport),
 });
 export type RunReport = z.infer<typeof RunReport>;
+
+/** A trainee's question: typed, or spoken as 16-bit PCM WAV (about 60 s at 16 kHz fits). */
+export const AskRequest = z
+  .object({
+    text: z.string().trim().min(1).max(500).optional(),
+    audio: z
+      .object({ mime: z.literal("audio/wav"), data: z.string().min(1).max(2_800_000) })
+      .optional(),
+  })
+  .refine((r) => (r.text === undefined) !== (r.audio === undefined), {
+    message: "Send either text or audio",
+  });
+export type AskRequest = z.infer<typeof AskRequest>;
+
+export const AskResponse = z.object({ question: z.string(), answer: z.string() });
+export type AskResponse = z.infer<typeof AskResponse>;

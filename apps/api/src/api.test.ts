@@ -228,3 +228,51 @@ describe("guide editing", () => {
     expect((await patch({ version: 2, steps: [] })).status).toBe(400);
   });
 });
+
+describe("questions", () => {
+  it("answers a typed question about the current step without changing the coach state", async () => {
+    const { app } = await runtime();
+    const id = CoachUpdate.parse(
+      (await call(app, "POST", "/sessions", { guideId: "ps1-buttons" })).json,
+    ).session.id;
+    const res = await call(app, "POST", `/sessions/${id}/ask`, {
+      text: "What does done look like?",
+    });
+    expect(res.status).toBe(200);
+    expect(res.json.question).toBe("What does done look like?");
+    expect(String(res.json.answer)).toContain("Power button sticks down");
+    expect((await call(app, "GET", `/sessions/${id}`)).json).toMatchObject({
+      session: { state: "briefing" },
+    });
+  });
+
+  it("says so when it hears nothing, and validates the request", async () => {
+    const { app } = await runtime();
+    const id = CoachUpdate.parse(
+      (await call(app, "POST", "/sessions", { guideId: "ps1-buttons" })).json,
+    ).session.id;
+    const silence = Buffer.from(new Uint8Array(64)).toString("base64");
+    const header = Buffer.from("RIFF\0\0\0\0WAVEfmt ");
+    const fake = Buffer.concat([header, Buffer.alloc(64)]).toString("base64");
+    expect(
+      (
+        await call(app, "POST", `/sessions/${id}/ask`, {
+          audio: { mime: "audio/wav", data: silence },
+        })
+      ).status,
+    ).toBe(422);
+    expect(
+      (await call(app, "POST", `/sessions/${id}/ask`, { audio: { mime: "audio/wav", data: fake } }))
+        .status,
+    ).toBe(422);
+    expect(
+      (
+        await call(app, "POST", `/sessions/${id}/ask`, {
+          text: "a",
+          audio: { mime: "audio/wav", data: silence },
+        })
+      ).status,
+    ).toBe(400);
+    expect((await call(app, "POST", `/sessions/${id}/ask`, {})).status).toBe(400);
+  });
+});
