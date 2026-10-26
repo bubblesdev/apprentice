@@ -5,6 +5,7 @@ import {
   type BuildStatusRepository,
   type Clock,
   type GuideRepository,
+  type MediaStore,
 } from "@apprentice/core";
 import type { z } from "zod";
 import { buildGuide, type PipelineProgress } from "./build.js";
@@ -47,8 +48,12 @@ export async function runBuildGuideJob(payload: unknown, deps: BuildGuideJobDeps
 
 export interface BuildGuideHandlerDeps extends Omit<BuildGuideJobDeps, "pipeline"> {
   /** Model adapters for one guide build, metered and capped against that guide. */
-  adaptersFor: (guideId: string) => Promise<Pick<PipelineDeps, "reasoner" | "segmenter">>;
+  adaptersFor: (
+    guideId: string,
+  ) => Promise<Pick<PipelineDeps, "reasoner" | "segmenter" | "illustrator">>;
   frames: PipelineDeps["frames"];
+  /** Where step diagrams are stored; without it no diagrams are drawn. */
+  media?: MediaStore;
   /** Where progress is recorded for the Building screen. */
   builds?: BuildStatusRepository;
   /** Runs before the build, e.g. downloading a direct video link (see ingestRemoteVideo). */
@@ -73,10 +78,15 @@ export function buildGuideHandler(
     };
     try {
       const payload = deps.prepare ? await deps.prepare(parsed) : parsed;
-      const { reasoner, segmenter } = await deps.adaptersFor(guideId);
+      const { reasoner, segmenter, illustrator } = await deps.adaptersFor(guideId);
       await runBuildGuideJob(payload, {
         ...deps,
-        pipeline: { reasoner, segmenter, frames: deps.frames },
+        pipeline: {
+          reasoner,
+          segmenter,
+          frames: deps.frames,
+          ...(illustrator && deps.media ? { illustrator, media: deps.media } : {}),
+        },
         onProgress: (id, p) => {
           deps.onProgress?.(id, p);
           record((s) => applyBuildStage(s, guideId, p, clock.now().toISOString()));

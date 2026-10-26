@@ -235,3 +235,51 @@
 .footerRow > * {
   flex: 1;
 }
+
+.viewToggle {
+  display: inline-flex;
+  align-self: flex-start;
+  gap: 4px;
+  padding: 3px;
+  border-radius: var(--radius-pill);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+}
+
+.viewOption {
+  position: relative;
+  min-height: 36px;
+  padding: 0 14px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-pill);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-muted);
+  cursor: pointer;
+}
+
+.viewOption input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.viewOption:has(input:focus-visible) {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.viewOptionOn {
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+}
+
+.diagram {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: contain;
+  border-radius: 14px;
+  background: var(--color-surface-raised);
+}

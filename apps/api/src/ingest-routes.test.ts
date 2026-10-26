@@ -110,7 +110,7 @@ describe("build progress and media", () => {
     const { app } = await runtime();
     const res = await app.request("/guides/ps1-buttons/build");
     const status = BuildStatus.parse(await res.json());
-    expect(status.stages.map((s) => s.state)).toEqual(["done", "done", "done", "done"]);
+    expect(status.stages.map((s) => s.state)).toEqual(["done", "done", "done", "done", "done"]);
     expect((await app.request("/guides/unknown/build")).status).toBe(404);
   });
 
@@ -134,6 +134,19 @@ describe("build progress and media", () => {
     expect(frame.status).toBe(200);
     expect(frame.headers.get("content-type")).toBe("image/jpeg");
     expect((await app.request("/media/guides/secret.json")).status).toBe(404);
+  });
+
+  it("serves the seeded guide's placeholder diagrams with a strict CSP", async () => {
+    const { app } = await runtime();
+    const guide = (await (await app.request("/guides/ps1-buttons")).json()) as {
+      steps: { diagramKey?: string }[];
+    };
+    const key = guide.steps[0]?.diagramKey;
+    expect(key).toMatch(/^guides\/ps1-buttons\/diagrams\/1-[0-9a-f]{12}\.svg$/);
+    const res = await app.request(`/media/${key}`);
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-security-policy")).toContain("default-src 'none'");
+    expect(await res.text()).toContain("MUSE IMAGE NOT CALLED");
   });
 
   it("returns 404 for a reference frame it cannot extract (fake mode)", async () => {

@@ -74,8 +74,15 @@ export interface Transcriber {
   transcribe(audio: Media): Promise<{ text: string }>;
 }
 
+/** A clean step diagram (Muse Image). Returns image bytes ready to store. */
 export interface Illustrator {
-  diagram(input: { instruction: string; reference: Media[] }): Promise<Media>;
+  diagram(input: {
+    title: string;
+    instruction: string;
+    parts: string[];
+    /** Expert frames of the finished step; empty for written instructions. */
+    reference: Media[];
+  }): Promise<{ kind: "bytes"; mime: string; data: Uint8Array }>;
 }
 
 /** Pulls still frames out of a source video (ffmpeg in the worker, a fixture in tests). */

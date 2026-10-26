@@ -1,4 +1,10 @@
-import type { FrameExtractor, Segmenter, VisionReasoner } from "@apprentice/core";
+import type {
+  FrameExtractor,
+  Illustrator,
+  MediaStore,
+  Segmenter,
+  VisionReasoner,
+} from "@apprentice/core";
 import { z } from "zod";
 
 /** Tunables for building a guide. They are part of each stage's input, so changing one re-runs only the stages it feeds. */
@@ -22,6 +28,8 @@ export const PipelineConfig = z.object({
       presenceConfidence: z.number().min(0).max(1).default(0.5),
     })
     .default({}),
+  /** Muse Image step diagrams; drawn only when an illustrator and a media store are provided. */
+  diagrams: z.object({ enabled: z.boolean().default(true) }).default({}),
 });
 export type PipelineConfig = z.infer<typeof PipelineConfig>;
 
@@ -29,4 +37,7 @@ export interface PipelineDeps {
   reasoner: VisionReasoner;
   segmenter: Segmenter;
   frames: FrameExtractor;
+  /** Optional: with both, each step gets a diagram stored in `media`. */
+  illustrator?: Illustrator;
+  media?: MediaStore;
 }

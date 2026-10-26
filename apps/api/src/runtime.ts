@@ -85,6 +85,7 @@ export async function createRuntime(env: ApiEnv, options: RuntimeOptions = {}) {
       store: persistence.artifacts,
       frames,
       builds: persistence.builds,
+      media,
       clock,
       prepare: async (p) => ingestDocument(await ingestRemoteVideo(p, uploads)),
       adaptersFor: (guideId) =>

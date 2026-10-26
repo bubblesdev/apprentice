@@ -3,7 +3,7 @@ import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { canonicalJson } from "@apprentice/core";
 import { z } from "zod";
-import type { FilesApi, ResponseResult, ResponsesApi } from "./client.js";
+import { ResponseImage, type FilesApi, type ResponseResult, type ResponsesApi } from "./client.js";
 
 /** Key/value store for recorded model responses. Values are JSON. */
 export interface ResponseCache {
@@ -81,6 +81,7 @@ export class CacheMissError extends Error {
 const CachedResponse = z.object({
   model: z.string().optional(),
   text: z.string(),
+  images: z.array(ResponseImage).optional(),
   inputTokens: z.number(),
   outputTokens: z.number(),
   recordedAt: z.string(),
@@ -112,14 +113,15 @@ export class CachedMetaApi implements ResponsesApi, FilesApi {
   private async lookupOrCall(key: string, body: Record<string, unknown>): Promise<ResponseResult> {
     const hit = CachedResponse.safeParse(await this.cache.get(key));
     if (hit.success) {
-      const { text, inputTokens, outputTokens } = hit.data;
-      return { text, inputTokens, outputTokens, cached: true };
+      const { text, images, inputTokens, outputTokens } = hit.data;
+      return { text, ...(images ? { images } : {}), inputTokens, outputTokens, cached: true };
     }
     if (!this.live) throw new CacheMissError(key);
     const result = await this.live.createResponse(body);
     await this.cache.set(key, {
       model: typeof body.model === "string" ? body.model : undefined,
       text: result.text,
+      images: result.images,
       inputTokens: result.inputTokens,
       outputTokens: result.outputTokens,
       recordedAt: new Date().toISOString(),

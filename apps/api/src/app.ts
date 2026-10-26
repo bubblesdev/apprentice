@@ -130,16 +130,23 @@ export function createApp(deps: AppDeps, app: Hono = new Hono()): Hono {
     }
   });
 
-  /** Evidence frames captured during live sessions. */
+  /** Evidence frames captured during live sessions, and step diagrams. */
   app.get("/media/*", async (c) => {
     const key = c.req.path.slice("/media/".length);
-    if (!/^sessions\/[\w-]+\/frames\/\d+\.jpg$/.test(key))
-      return c.json({ error: "Not found" }, 404);
+    const allowed =
+      /^sessions\/[\w-]+\/frames\/\d+\.jpg$/.test(key) ||
+      /^guides\/[\w-]+\/diagrams\/[\w-]+\.(png|jpg|webp|svg)$/.test(key);
+    if (!allowed) return c.json({ error: "Not found" }, 404);
     const item = await deps.media.get(key);
     if (!item) return c.json({ error: "Not found" }, 404);
     return c.body(Buffer.from(item.data), 200, {
       "Content-Type": item.mime,
-      "Cache-Control": "private, max-age=3600",
+      "Cache-Control": key.startsWith("guides/")
+        ? "public, max-age=86400, immutable"
+        : "private, max-age=3600",
+      // Media is only ever shown as an image; an SVG opened directly may not run script.
+      "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'",
+      "X-Content-Type-Options": "nosniff",
     });
   });
 

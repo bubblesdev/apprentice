@@ -6,7 +6,7 @@ import { FrameImage } from "../../components/FrameImage";
 import { Icon } from "../../components/Icon";
 import { Footer, Screen, TopBar } from "../../components/Screen";
 import { GuideEditor } from "./GuideEditor";
-import { api, referenceFrameUrl } from "../../lib/api";
+import { api, evidenceFrameUrl, referenceFrameUrl } from "../../lib/api";
 import { cx } from "../../lib/cx";
 import { aboutMinutes, clock, plural, uniqueParts } from "../../lib/format";
 import { useResource } from "../../lib/useResource";
@@ -33,6 +33,9 @@ function StepItem({
   onToggle: () => void;
 }) {
   const detailId = useId();
+  const [view, setView] = useState<"photo" | "diagram">(
+    guide.source.kind === "document" ? "diagram" : "photo",
+  );
   const t = step.referenceTimesS.at(-1);
   const hl = t === undefined ? undefined : highlight(step, t);
   const isVideo = guide.source.kind !== "document";
@@ -56,7 +59,32 @@ function StepItem({
       </button>
       {open ? (
         <div id={detailId} className={styles.detail}>
-          {isVideo && t !== undefined ? (
+          {step.diagramKey ? (
+            <div
+              className={styles.viewToggle}
+              role="radiogroup"
+              aria-label="Show the expert photo or the diagram"
+            >
+              {(["photo", "diagram"] as const).map((v) => (
+                <label key={v} className={cx(styles.viewOption, view === v && styles.viewOptionOn)}>
+                  <input
+                    type="radio"
+                    name={`view-${step.index}`}
+                    checked={view === v}
+                    onChange={() => setView(v)}
+                  />
+                  {v === "photo" ? "Expert photo" : "Diagram"}
+                </label>
+              ))}
+            </div>
+          ) : null}
+          {view === "diagram" && step.diagramKey ? (
+            <img
+              className={styles.diagram}
+              src={evidenceFrameUrl(step.diagramKey)}
+              alt={`Diagram of step ${step.index + 1}: ${step.title}`}
+            />
+          ) : isVideo && t !== undefined ? (
             <FrameImage
               className={styles.reference}
               src={referenceFrameUrl(guide.id, t)}

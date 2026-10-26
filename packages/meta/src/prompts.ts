@@ -63,3 +63,23 @@ export function refineBoundaryPrompt(
     'null. JSON only: {"end_s":number|null,"confidence":0-1,"evidence":"one sentence"}'
   );
 }
+
+/** Muse Image: one calm, labelled line diagram per step, drawn from the expert's real frame. */
+export function diagramPrompt(
+  step: { title: string; instruction: string; parts: string[] },
+  hasReference: boolean,
+): string {
+  return (
+    "Draw a clean instructional diagram for one step of a hands-on job. " +
+    `Step: ${step.title}. ${step.instruction} ` +
+    (step.parts.length
+      ? `Label these parts with short leader lines: ${step.parts.join(", ")}. `
+      : "") +
+    (hasReference
+      ? "Base the layout and the objects on the attached photo of the finished step. "
+      : "") +
+    "Style: flat line art, white strokes on a near-black background, one soft blue accent on the " +
+    "part being worked on, generous space, no shading, no people's faces, no brand logos, and no " +
+    "text other than the part labels."
+  );
+}
