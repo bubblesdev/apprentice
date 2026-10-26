@@ -81,6 +81,7 @@ export function referenceFrameUrl(guideId: string, t: number): string {
   return `${API_URL}/guides/${encodeURIComponent(guideId)}/frame?t=${t}`;
 }
 
+/** Any stored media by key: evidence frames and step diagrams. */
 export function evidenceFrameUrl(key: string): string {
   return `${API_URL}/media/${key}`;
 }

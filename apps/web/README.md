@@ -26,4 +26,6 @@ The Guide screen's Edit mode renames, rewords, reorders and deletes steps (each 
 
 Manual accepts pasted text, a PDF, Markdown or text file, or a link to a help page; the server extracts the text.
 
-Not built yet: spoken questions (Voice Transcribe), step diagrams (Muse Image).
+Each step can show the expert photo or its Muse Image diagram.
+
+Not built yet: spoken questions (Voice Transcribe).

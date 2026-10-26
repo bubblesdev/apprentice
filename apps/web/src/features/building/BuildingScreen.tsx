@@ -28,7 +28,7 @@ export function BuildingScreen() {
       pollMs: 1000,
       stopWhen: (s) =>
         Boolean(s?.error) ||
-        s?.stages.some((x) => x.stage === "ground_parts" && x.state !== "running") === true,
+        s?.stages.some((x) => x.stage === "draw_diagrams" && x.state !== "running") === true,
     },
   );
 
@@ -89,7 +89,9 @@ export function BuildingScreen() {
               <span className={styles.stageText}>
                 <span className={styles.stageLabel}>{r.label}</span>
                 <span className={styles.stageDetail}>
-                  {r.state === "skipped" ? "Not needed for written instructions" : r.detail}
+                  {r.state === "skipped"
+                    ? (r.detail ?? "Not needed for written instructions")
+                    : r.detail}
                 </span>
               </span>
               {r.model ? <span className={styles.model}>{r.model}</span> : null}

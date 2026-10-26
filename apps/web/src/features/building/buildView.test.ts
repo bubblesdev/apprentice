@@ -16,9 +16,15 @@ describe("buildRows", () => {
       "building",
       false,
     );
-    expect(rows.map((r) => r.state)).toEqual(["done", "active", "pending", "pending"]);
+    expect(rows.map((r) => r.state)).toEqual(["done", "active", "pending", "pending", "pending"]);
     expect(rows[0]?.detail).toBe("10 steps found");
-    expect(rows.map((r) => r.model)).toEqual(["Muse Spark", "Muse Spark", "", "SAM 3.1"]);
+    expect(rows.map((r) => r.model)).toEqual([
+      "Muse Spark",
+      "Muse Spark",
+      "",
+      "SAM 3.1",
+      "Muse Image",
+    ]);
   });
 
   it("starts with the first stage active before any progress arrives", () => {
@@ -35,7 +41,7 @@ describe("buildRows", () => {
       true,
     );
     expect(rows[0]?.label).toBe("Reading the instructions");
-    expect(rows.map((r) => r.state)).toEqual(["done", "skipped", "active", "pending"]);
+    expect(rows.map((r) => r.state)).toEqual(["done", "skipped", "active", "pending", "pending"]);
   });
 
   it("has no active stage once ready or failed", () => {

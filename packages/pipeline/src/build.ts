@@ -4,6 +4,7 @@ import { PipelineConfig, type PipelineDeps } from "./config.js";
 import { PipelineInput } from "./schemas.js";
 import { runStage, type ArtifactStore } from "./stage.js";
 import { boundaryStage, type BoundaryNote } from "./stages/boundaries.js";
+import { diagramStage } from "./stages/diagrams.js";
 import { draftStage } from "./stages/draft.js";
 import { groundingStage } from "./stages/grounding.js";
 import { referenceStage } from "./stages/references.js";
@@ -13,6 +14,7 @@ export const StageName = z.enum([
   "refine_boundaries",
   "reference_frames",
   "ground_parts",
+  "draw_diagrams",
 ]);
 export type StageName = z.infer<typeof StageName>;
 
@@ -149,6 +151,41 @@ export async function buildGuide(
     report({ stage: "ground_parts", state: "skipped", detail: "No video to ground parts in" });
   }
 
+  let diagramKeys: (string | null)[] = [];
+  const { illustrator, media } = deps;
+  if (illustrator && media && config.diagrams.enabled) {
+    report({ stage: "draw_diagrams", state: "running" });
+    const drawn = await runStage(
+      diagramStage,
+      {
+        guideId: input.guideId,
+        ...(isVideo ? { frameSource } : {}),
+        steps: steps.map((s, i) => {
+          const t = referenceTimesS[i]?.at(-1);
+          return {
+            title: s.title,
+            instruction: s.instruction,
+            parts: s.parts,
+            ...(t === undefined ? {} : { referenceS: t }),
+          };
+        }),
+      },
+      { ...deps, illustrator, media },
+      store,
+    );
+    artifacts.draw_diagrams = drawn.key;
+    diagramKeys = drawn.output.keys;
+    const count = diagramKeys.filter(Boolean).length;
+    report({
+      stage: "draw_diagrams",
+      state: "done",
+      reused: drawn.reused,
+      detail: `${count} of ${steps.length} diagrams drawn`,
+    });
+  } else {
+    report({ stage: "draw_diagrams", state: "skipped", detail: "Diagrams are off" });
+  }
+
   const guide = Guide.parse({
     id: input.guideId,
     title: input.source.title,
@@ -165,6 +202,7 @@ export async function buildGuide(
       parts: parts[index] ?? [],
       referenceTimesS: referenceTimesS[index] ?? [],
       safety: safetyOf(s),
+      ...(diagramKeys[index] ? { diagramKey: diagramKeys[index] } : {}),
     })),
   });
   return { guide, boundaries, artifacts };

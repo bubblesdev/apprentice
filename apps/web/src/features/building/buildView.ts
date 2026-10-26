@@ -43,6 +43,12 @@ const STAGES: {
     detail: "Highlighting each part in the expert frames",
     model: "SAM 3.1",
   },
+  {
+    stage: "draw_diagrams",
+    label: "Drawing step diagrams",
+    detail: "One clean diagram per step",
+    model: "Muse Image",
+  },
 ];
 
 export type BuildPhase = "building" | "ready" | "failed";

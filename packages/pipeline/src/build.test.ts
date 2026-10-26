@@ -1,5 +1,7 @@
+import { InMemoryMediaStore } from "@apprentice/core";
 import {
   FakeFrameExtractor,
+  FakeIllustrator,
   FakeReasoner,
   FakeSegmenter,
   loadJobFixture,
@@ -131,6 +133,7 @@ describe("buildGuide on the recorded PS1 job", () => {
     expect(progress.filter((p) => p.state === "skipped").map((p) => p.stage)).toEqual([
       "refine_boundaries",
       "ground_parts",
+      "draw_diagrams",
     ]);
   });
 
@@ -138,5 +141,34 @@ describe("buildGuide on the recorded PS1 job", () => {
     await expect(
       buildGuide({ ...input(), guideId: "" }, deps(), { store: new MemoryArtifactStore() }),
     ).rejects.toThrow();
+  });
+
+  it("draws a diagram per step with an illustrator, storing each in the media store", async () => {
+    const illustrator = new FakeIllustrator();
+    const media = new InMemoryMediaStore();
+    const store = new MemoryArtifactStore();
+    const { guide } = await buildGuide(input(), { ...deps(), illustrator, media }, { store });
+    const keys = guide.steps.map((s) => s.diagramKey);
+    expect(keys.every((k) => k?.match(/^guides\/ps1\/diagrams\/\d+-[0-9a-f]{12}\.svg$/))).toBe(
+      true,
+    );
+    expect((await media.get(keys[0] ?? ""))?.mime).toBe("image/svg+xml");
+    expect(illustrator.calls).toHaveLength(10);
+    await buildGuide(input(), { ...deps(), illustrator, media }, { store });
+    expect(illustrator.calls).toHaveLength(10);
+  });
+
+  it("keeps building when one diagram fails", async () => {
+    const illustrator = new FakeIllustrator();
+    const original = illustrator.diagram.bind(illustrator);
+    illustrator.diagram = async (i: Parameters<FakeIllustrator["diagram"]>[0]) =>
+      i.title.startsWith("Test") ? Promise.reject(new Error("no image")) : original(i);
+    const { guide } = await buildGuide(
+      input(),
+      { ...deps(), illustrator, media: new InMemoryMediaStore() },
+      { store: new MemoryArtifactStore() },
+    );
+    expect(guide.steps.at(-1)?.diagramKey).toBeUndefined();
+    expect(guide.steps[0]?.diagramKey).toBeDefined();
   });
 });

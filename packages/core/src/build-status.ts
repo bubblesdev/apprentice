@@ -2,7 +2,13 @@ import { z } from "zod";
 
 /** Progress of one guide build, for the Building screen. */
 export const BuildStage = z.object({
-  stage: z.enum(["draft_steps", "refine_boundaries", "reference_frames", "ground_parts"]),
+  stage: z.enum([
+    "draft_steps",
+    "refine_boundaries",
+    "reference_frames",
+    "ground_parts",
+    "draw_diagrams",
+  ]),
   state: z.enum(["running", "done", "skipped"]),
   reused: z.boolean().optional(),
   detail: z.string().optional(),

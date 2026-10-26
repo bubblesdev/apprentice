@@ -56,7 +56,9 @@ export async function storeStream(
     await rename(tmp, path);
     return { path, url: pathToFileURL(path).href, bytes };
   } catch (error) {
-    out.destroy();
+    // Wait for the stream to close: the file may still be opening, and would appear after rm.
+    if (!out.closed)
+      await new Promise<void>((resolve) => out.destroy().once("close", () => resolve()));
     await rm(tmp, { force: true });
     throw error;
   }

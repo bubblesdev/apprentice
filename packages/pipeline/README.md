@@ -3,8 +3,8 @@
 Instructions to guide, as idempotent, versioned stages.
 
 ```
-draft_steps -> refine_boundaries -> reference_frames -> ground_parts -> Guide
- Muse Spark     Muse Spark           (no model)          SAM 3.1
+draft_steps -> refine_boundaries -> reference_frames -> ground_parts -> draw_diagrams -> Guide
+ Muse Spark     Muse Spark           (no model)          SAM 3.1        Muse Image
 ```
 
 | Stage               | What it does                                                                                                   |

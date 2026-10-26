@@ -1,8 +1,9 @@
-import type { Segmenter, VisionReasoner } from "@apprentice/core";
+import type { Illustrator, Segmenter, VisionReasoner } from "@apprentice/core";
 import { z } from "zod";
 import { CachedMetaApi, FileResponseCache } from "./cache.js";
 import { DEFAULT_BASE_URL, MetaClient } from "./client.js";
-import { FakeReasoner, FakeSegmenter, loadJobFixture } from "./fake/index.js";
+import { FakeIllustrator, FakeReasoner, FakeSegmenter, loadJobFixture } from "./fake/index.js";
+import { MuseIllustrator } from "./illustrator.js";
 import type { CostMeter } from "./meter.js";
 import { RetryingMetaApi } from "./retry.js";
 import { SamSegmenter } from "./sam-segmenter.js";
@@ -37,6 +38,7 @@ export interface MetaAdapters {
   mode: Exclude<AdapterMode, "auto">;
   reasoner: VisionReasoner;
   segmenter: Segmenter;
+  illustrator: Illustrator;
 }
 
 export interface CreateAdaptersOptions {
@@ -63,6 +65,7 @@ export async function createMetaAdapters(options: CreateAdaptersOptions): Promis
       mode,
       reasoner: new FakeReasoner({ fixture, ...(judge ? { judge } : {}) }),
       segmenter: new FakeSegmenter(fixture),
+      illustrator: new FakeIllustrator(),
     };
   }
 
@@ -75,5 +78,10 @@ export async function createMetaAdapters(options: CreateAdaptersOptions): Promis
     mode === "live" ? live : undefined,
   );
   const deps = { api, files: api, ...(meter ? { meter } : {}) };
-  return { mode, reasoner: new SparkReasoner(deps), segmenter: new SamSegmenter(deps) };
+  return {
+    mode,
+    reasoner: new SparkReasoner(deps),
+    segmenter: new SamSegmenter(deps),
+    illustrator: new MuseIllustrator(deps),
+  };
 }
