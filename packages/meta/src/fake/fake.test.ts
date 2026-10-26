@@ -26,6 +26,7 @@ describe("loadJobFixture", () => {
     });
     expect(fixture.judgements).toHaveLength(21);
     expect(fixture.finishChecks).toHaveLength(16);
+    expect(fixture.judgeUsage).toEqual({ calls: 21, inputTokens: 42717, outputTokens: 33493 });
     expect(Object.keys(fixture.samConcepts)).toEqual([
       "round button",
       "plastic bracket",

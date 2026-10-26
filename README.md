@@ -35,6 +35,7 @@ Development: `pnpm install`, then `pnpm check` (lint, typecheck, tests).
 - **26 Oct 2026:** `meta` adapters: Muse Spark reasoner (step draft, boundary refinement, strict-instructor step judge), SAM 3.1 segmenter, request-hash response cache (each real call paid once), retries, per-scope cost meter with a hard cap, and fakes that replay the recorded spike outputs.
 - **26 Oct 2026:** `coach` package: pure verify-then-advance state machine and policy (two-sample agreement, required parts, show me closer, retry, unsafe stop, safety briefings, trainee override marked unverified), step verifier on the Meta ports, run report; exhaustive state and event tests.
 - **26 Oct 2026:** `pipeline` package: step draft, boundary refinement on dense frames around each drafted end, reference frames and SAM part grounding as idempotent stages keyed by a hash of their input; tested on the recorded PS1 job (a rebuild makes no model calls).
+- **26 Oct 2026:** `eval` package and CLI: per-verdict precision and recall, coach gate metrics (pass rate, catch rate, false passes, false unsafe stops), threshold sweep and cost per guide and coaching minute; baseline from the recorded spike-2 runs in `docs/eval/baseline-spike2.md`.
 
 ## Running the spike
 
