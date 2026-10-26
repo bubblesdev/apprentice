@@ -3,6 +3,7 @@ import pg from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   PgArtifactStore,
+  PgBuildStatusRepository,
   PgGuideRepository,
   PgSessionRepository,
   PgUsageLog,
@@ -29,7 +30,7 @@ describe.runIf(url)("Postgres store", () => {
   beforeAll(async () => {
     await migrate(pool);
     await migrate(pool); // idempotent
-    await pool.query("truncate guides, sessions, artifacts, usage_events");
+    await pool.query("truncate guides, sessions, artifacts, usage_events, guide_builds");
   });
   afterAll(() => pool.end());
 
@@ -59,6 +60,18 @@ describe.runIf(url)("Postgres store", () => {
     await repo.put(session);
     await repo.put({ ...session, state: "verifying" });
     expect((await repo.get("s1"))?.state).toBe("verifying");
+  });
+
+  it("stores build progress per guide", async () => {
+    const repo = new PgBuildStatusRepository(pool);
+    const status = {
+      guideId: "g1",
+      stages: [{ stage: "draft_steps" as const, state: "done" as const, detail: "10 steps found" }],
+      updatedAt: "2026-10-27T10:00:00.000Z",
+    };
+    await repo.put(status);
+    await repo.put({ ...status, error: "Budget used" });
+    expect(await repo.get("g1")).toEqual({ ...status, error: "Budget used" });
   });
 
   it("stores pipeline artifacts by key", async () => {

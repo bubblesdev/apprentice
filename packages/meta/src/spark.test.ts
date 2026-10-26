@@ -1,3 +1,7 @@
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { pathToFileURL } from "node:url";
 import { describe, expect, it } from "vitest";
 import { ModelOutputError, UnsupportedMediaError } from "./errors.js";
 import { CostMeter } from "./meter.js";
@@ -56,6 +60,21 @@ describe("SparkReasoner.draftSteps", () => {
         doneWhen: "Cap out",
       },
     ]);
+  });
+
+  it("uploads a local file: video before drafting", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "apprentice-video-"));
+    const path = join(dir, "job.mp4");
+    await writeFile(path, new Uint8Array([0, 0, 0, 24]));
+    const api = new StubMetaApi([
+      { text: '{"steps":[{"start_s":0,"end_s":5,"title":"Open","visible_check":"Lid open"}]}' },
+    ]);
+    await new SparkReasoner({ api, files: api }).draftSteps({
+      kind: "url",
+      url: pathToFileURL(path).href,
+    });
+    expect(api.uploads).toEqual([{ filename: "video.mp4", mime: "video/mp4", bytes: 4 }]);
+    await rm(dir, { recursive: true, force: true });
   });
 
   it("drafts from document text without sending media", async () => {

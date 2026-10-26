@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { resolve } from "node:path";
 import { CoachPolicy, StepVerifier } from "@apprentice/coach";
 import {
   InMemoryMediaStore,
@@ -13,6 +14,7 @@ import {
   BUILD_GUIDE_JOB,
   FfmpegFrameExtractor,
   buildGuideHandler,
+  ingestRemoteVideo,
   type BuildGuidePayload,
 } from "@apprentice/pipeline";
 import { createNodeWebSocket } from "@hono/node-ws";
@@ -28,9 +30,12 @@ export const ApiEnv = MetaEnv.extend({
   /** Hard caps on Meta spend per guide build and per coaching session. */
   GUIDE_BUDGET_USD: z.coerce.number().positive().default(1.5),
   SESSION_BUDGET_USD: z.coerce.number().positive().default(0.5),
-  /** Build the recorded PS1 guide at start-up in fake mode, so the web app has something to coach. */
+  /** Uploaded and downloaded source videos. With a separate worker, both must see this directory. */
+  UPLOAD_DIR: z.string().min(1).default(".data/uploads"),
+  UPLOAD_MAX_MB: z.coerce.number().positive().default(300),
   /** Postgres for guides, sessions, artifacts and pg-boss jobs; without it everything is in memory. */
   DATABASE_URL: z.string().min(1).optional(),
+  /** Build the recorded PS1 guide at start-up in fake mode, so the web app has something to coach. */
   SEED_FIXTURE_GUIDE: z
     .enum(["true", "false"])
     .default("true")
@@ -70,6 +75,7 @@ export async function createRuntime(env: ApiEnv, options: RuntimeOptions = {}) {
       ? new FakeFrameExtractor(env.APPRENTICE_FIXTURE_JOB)
       : new FfmpegFrameExtractor();
   const media = new InMemoryMediaStore();
+  const uploads = { dir: resolve(env.UPLOAD_DIR), maxBytes: env.UPLOAD_MAX_MB * 1e6 };
   const policy = CoachPolicy.parse({});
 
   const queue = await persistence.createQueue({
@@ -77,6 +83,9 @@ export async function createRuntime(env: ApiEnv, options: RuntimeOptions = {}) {
       guides,
       store: persistence.artifacts,
       frames,
+      builds: persistence.builds,
+      clock,
+      prepare: (p) => ingestRemoteVideo(p, uploads),
       adaptersFor: (guideId) =>
         adapters(meter({ kind: "guide", id: guideId }, env.GUIDE_BUDGET_USD)),
     }),
@@ -112,8 +121,12 @@ export async function createRuntime(env: ApiEnv, options: RuntimeOptions = {}) {
   createApp(
     {
       guides,
+      builds: persistence.builds,
       queue,
       coach,
+      media,
+      frames,
+      uploads,
       newId,
       corsOrigin: env.CORS_ORIGIN,
       upgradeWebSocket: nodeWs.upgradeWebSocket,
