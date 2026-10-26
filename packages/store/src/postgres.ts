@@ -1,7 +1,9 @@
 import {
+  BuildStatus,
   Guide,
   Session,
   UsageEvent,
+  type BuildStatusRepository,
   type GuideRepository,
   type SessionRepository,
 } from "@apprentice/core";
@@ -43,6 +45,10 @@ export const MIGRATIONS = [
      doc jsonb not null,
      at timestamptz not null)`,
   `create index if not exists usage_events_scope on usage_events (scope_kind, scope_id)`,
+  `create table if not exists guide_builds (
+     guide_id text primary key,
+     doc jsonb not null,
+     updated_at timestamptz not null default now())`,
 ];
 
 export async function migrate(sql: Sql): Promise<void> {
@@ -136,5 +142,25 @@ export class PgUsageLog {
       [scope.kind, scope.id],
     );
     return rows.map((r) => UsageEvent.parse(r.doc));
+  }
+}
+
+export class PgBuildStatusRepository implements BuildStatusRepository {
+  constructor(private readonly sql: Sql) {}
+
+  async get(guideId: string): Promise<BuildStatus | undefined> {
+    const { rows } = await this.sql.query<{ doc: unknown }>(
+      "select doc from guide_builds where guide_id = $1",
+      [guideId],
+    );
+    return rows[0] ? BuildStatus.parse(rows[0].doc) : undefined;
+  }
+
+  async put(status: BuildStatus): Promise<void> {
+    await this.sql.query(
+      `insert into guide_builds (guide_id, doc) values ($1, $2)
+       on conflict (guide_id) do update set doc = excluded.doc, updated_at = now()`,
+      [status.guideId, JSON.stringify(BuildStatus.parse(status))],
+    );
   }
 }

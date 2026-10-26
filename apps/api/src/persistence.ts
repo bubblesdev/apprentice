@@ -1,6 +1,8 @@
 import {
+  InMemoryBuildStatusRepository,
   InMemoryGuideRepository,
   InMemorySessionRepository,
+  type BuildStatusRepository,
   type GuideRepository,
   type JobQueue,
   type SessionRepository,
@@ -10,6 +12,7 @@ import { MemoryArtifactStore, type ArtifactStore } from "@apprentice/pipeline";
 import {
   PgArtifactStore,
   PgBossQueue,
+  PgBuildStatusRepository,
   PgGuideRepository,
   PgSessionRepository,
   PgUsageLog,
@@ -22,6 +25,7 @@ export interface Persistence {
   kind: "memory" | "postgres";
   guides: GuideRepository;
   sessions: SessionRepository;
+  builds: BuildStatusRepository;
   artifacts: ArtifactStore;
   recordUsage: (event: UsageEvent) => void;
   /** In memory, jobs run inline in this process; with Postgres they go to pg-boss for apps/worker. */
@@ -34,6 +38,7 @@ export function memoryPersistence(): Persistence {
     kind: "memory",
     guides: new InMemoryGuideRepository(),
     sessions: new InMemorySessionRepository(),
+    builds: new InMemoryBuildStatusRepository(),
     artifacts: new MemoryArtifactStore(),
     recordUsage: () => undefined,
     createQueue: async (handlers) => new InlineQueue(handlers),
@@ -53,6 +58,7 @@ export async function postgresPersistence(
     kind: "postgres",
     guides: new PgGuideRepository(pool),
     sessions: new PgSessionRepository(pool),
+    builds: new PgBuildStatusRepository(pool),
     artifacts: new PgArtifactStore(pool),
     recordUsage: (event) =>
       void usage.record(event).catch((e: unknown) => console.error("usage log", e)),

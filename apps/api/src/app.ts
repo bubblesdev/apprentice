@@ -1,14 +1,24 @@
+import { resolve, sep } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   ClientMessage,
   CreateGuideRequest,
   CreateSessionRequest,
   FramesRequest,
   ClientCoachEvent,
+  type BuildStatusRepository,
+  type FrameExtractor,
   type GuideRepository,
   type JobQueue,
+  type MediaStore,
   type ServerMessage,
 } from "@apprentice/core";
-import { BUILD_GUIDE_JOB, type BuildGuidePayload } from "@apprentice/pipeline";
+import {
+  BUILD_GUIDE_JOB,
+  IngestError,
+  storeStream,
+  type BuildGuidePayload,
+} from "@apprentice/pipeline";
 import { Hono, type Context } from "hono";
 import { cors } from "hono/cors";
 import type { UpgradeWebSocket } from "hono/ws";
@@ -17,7 +27,11 @@ import { CoachError, type CoachService, type IncomingFrame } from "./coach-servi
 
 export interface AppDeps {
   guides: GuideRepository;
+  builds: BuildStatusRepository;
   queue: JobQueue;
+  media: MediaStore;
+  frames: FrameExtractor;
+  uploads: { dir: string; maxBytes: number };
   coach: CoachService;
   newId: () => string;
   corsOrigin: string;
@@ -25,6 +39,23 @@ export interface AppDeps {
 }
 
 const STATUS = { not_found: 404, not_ready: 409, invalid_event: 409 } as const;
+
+const VIDEO_TYPES = new Set(["video/mp4", "video/quicktime", "video/webm"]);
+
+/**
+ * Media a client may point a build at. Local files are allowed only inside the uploads directory,
+ * so a request can never make the worker read (and send to a model) any other file on the server.
+ */
+function allowedMediaUrl(url: string, uploadsDir: string): boolean {
+  if (url.startsWith("file:")) {
+    try {
+      return resolve(fileURLToPath(url)).startsWith(uploadsDir + sep);
+    } catch {
+      return false;
+    }
+  }
+  return /^(https?|data|fixture):/i.test(url);
+}
 
 function decodeFrames(frames: z.infer<typeof FramesRequest>["frames"]): IncomingFrame[] {
   return frames.map((f) => ({ mime: f.mime, data: new Uint8Array(Buffer.from(f.data, "base64")) }));
@@ -59,9 +90,64 @@ export function createApp(deps: AppDeps, app: Hono = new Hono()): Hono {
     return guide ? c.json(guide) : c.json({ error: "Guide not found" }, 404);
   });
 
+  app.get("/guides/:id/build", async (c) => {
+    const status = await deps.builds.get(c.req.param("id"));
+    return status ? c.json(status) : c.json({ error: "No build for this guide" }, 404);
+  });
+
+  /** An expert reference frame, as JPEG, when the source video can be read here. */
+  app.get("/guides/:id/frame", async (c) => {
+    const guide = await deps.guides.get(c.req.param("id"));
+    const t = Number(c.req.query("t"));
+    if (!guide || !Number.isFinite(t) || t < 0) return c.json({ error: "Frame not found" }, 404);
+    if (!allowedMediaUrl(guide.source.location, deps.uploads.dir))
+      return c.json({ error: "Frame not found" }, 404);
+    const frame = await deps.frames
+      .frameAt({ kind: "url", url: guide.source.location }, t)
+      .catch(() => undefined);
+    if (frame?.kind !== "bytes") return c.json({ error: "Frame not available" }, 404);
+    return c.body(Buffer.from(frame.data), 200, {
+      "Content-Type": frame.mime,
+      "Cache-Control": "public, max-age=86400, immutable",
+    });
+  });
+
+  /** Upload a source video. The body is the raw file; it is stored under a hash of its content. */
+  app.post("/uploads", async (c) => {
+    const mime = (c.req.header("content-type") ?? "").split(";")[0]?.trim() ?? "";
+    if (!VIDEO_TYPES.has(mime)) return c.json({ error: "Upload an MP4, MOV or WebM video" }, 415);
+    const stream = c.req.raw.body;
+    if (!stream) return c.json({ error: "The file is empty" }, 400);
+    try {
+      const stored = await storeStream(stream, { ...deps.uploads, mime });
+      return c.json({ media: { kind: "url", url: stored.url, mime }, bytes: stored.bytes }, 201);
+    } catch (error) {
+      if (error instanceof IngestError) return c.json({ error: error.message }, 413);
+      throw error;
+    }
+  });
+
+  /** Evidence frames captured during live sessions. */
+  app.get("/media/*", async (c) => {
+    const key = c.req.path.slice("/media/".length);
+    if (!/^sessions\/[\w-]+\/frames\/\d+\.jpg$/.test(key))
+      return c.json({ error: "Not found" }, 404);
+    const item = await deps.media.get(key);
+    if (!item) return c.json({ error: "Not found" }, 404);
+    return c.body(Buffer.from(item.data), 200, {
+      "Content-Type": item.mime,
+      "Cache-Control": "private, max-age=3600",
+    });
+  });
+
   app.post("/guides", async (c) => {
     const req = await body(c, CreateGuideRequest);
     if (req instanceof Response) return req;
+    const urls = [req.media, req.frameSource].flatMap((m) => (m?.kind === "url" ? [m.url] : []));
+    if (req.source.location.includes(":")) urls.push(req.source.location);
+    if (urls.some((u) => !allowedMediaUrl(u, deps.uploads.dir))) {
+      return c.json({ error: "That media location is not allowed" }, 400);
+    }
     const guideId = deps.newId();
     const source = { id: deps.newId(), ...req.source };
     await deps.guides.put({

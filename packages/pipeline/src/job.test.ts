@@ -1,4 +1,4 @@
-import { InMemoryGuideRepository } from "@apprentice/core";
+import { InMemoryBuildStatusRepository, InMemoryGuideRepository } from "@apprentice/core";
 import {
   FakeFrameExtractor,
   FakeReasoner,
@@ -7,7 +7,7 @@ import {
   type JobFixture,
 } from "@apprentice/meta/fake";
 import { beforeAll, describe, expect, it } from "vitest";
-import { runBuildGuideJob } from "./job.js";
+import { buildGuideHandler, runBuildGuideJob } from "./job.js";
 import { MemoryArtifactStore } from "./stage.js";
 
 let fixture: JobFixture;
@@ -59,5 +59,54 @@ describe("runBuildGuideJob", () => {
     const d = deps();
     await expect(runBuildGuideJob({ guideId: "g1" }, d)).rejects.toThrow();
     expect(d.pipeline.reasoner.calls).toEqual([]);
+  });
+
+  it("records build progress, and the error when a build fails", async () => {
+    const builds = new InMemoryBuildStatusRepository();
+    const d = deps();
+    const handler = buildGuideHandler({
+      guides: d.guides,
+      store: d.store,
+      frames: d.pipeline.frames,
+      builds,
+      adaptersFor: async () => d.pipeline,
+    });
+    await handler(payload);
+    const status = await builds.get("g1");
+    expect(status?.stages.map((s) => [s.stage, s.state])).toEqual([
+      ["draft_steps", "done"],
+      ["refine_boundaries", "done"],
+      ["reference_frames", "done"],
+      ["ground_parts", "done"],
+    ]);
+
+    const failing = buildGuideHandler({
+      guides: d.guides,
+      store: d.store,
+      frames: d.pipeline.frames,
+      builds,
+      adaptersFor: async () => {
+        throw new Error("Budget of $1.50 used");
+      },
+    });
+    await expect(failing({ ...payload, guideId: "g2" })).rejects.toThrow(/Budget/);
+    expect((await builds.get("g2"))?.error).toBe("Budget of $1.50 used");
+  });
+
+  it("runs the prepare hook before building", async () => {
+    const d = deps();
+    const seen: string[] = [];
+    await buildGuideHandler({
+      guides: d.guides,
+      store: d.store,
+      frames: d.pipeline.frames,
+      adaptersFor: async () => d.pipeline,
+      prepare: async (p) => {
+        seen.push(p.guideId);
+        return { ...p, source: { ...p.source, title: "Prepared" } };
+      },
+    })(payload);
+    expect(seen).toEqual(["g1"]);
+    expect((await d.guides.get("g1"))?.title).toBe("Prepared");
   });
 });
