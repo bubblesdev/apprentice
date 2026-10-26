@@ -41,12 +41,23 @@ Apprentice turns instructions (a video, a manual, a help doc) into a verified st
 
 ## Ports (interfaces the domain depends on)
 
-- `VisionReasoner`: draft steps from a video or document; refine a step's end time from dense frames; judge a live step against the expert's reference frames.
-- `Segmenter`: track or locate concepts in a video clip or image.
-- `Transcriber`: speech to text, file and realtime.
-- `Illustrator`: step diagram from reference frames.
-- `FrameExtractor`: still frames from a source video at given times.
-- `GuideRepository`, `SessionRepository`, `JobQueue`, `Clock`: infrastructure (in-memory versions in `core` for tests and single-process development).
+- `VisionReasoner` (Muse Spark): draft steps from a video or document; refine a step's end time from dense frames; judge a live step against the expert's reference frames; answer a trainee's question about the current step.
+- `Segmenter` (SAM 3.1): track or locate concepts in a video clip or image.
+- `Transcriber` (Muse Voice Transcribe): speech to text for spoken questions.
+- `Illustrator` (Muse Image): a labelled step diagram from the expert's finished frame.
+- `Auditor` (Muse Wonder): safety review of a drafted guide; audit of a finished run.
+- `FrameExtractor` (ffmpeg): still frames from a source video at given times.
+- `GuideRepository`, `SessionRepository`, `BuildStatusRepository`, `MediaStore`, `JobQueue`, `Clock`: infrastructure, with in-memory versions in `core` and Postgres, file and R2 versions in `store`.
+
+## Meta models and their jobs
+
+| Model                 | Where                | Job                                                                                                       |
+| --------------------- | -------------------- | --------------------------------------------------------------------------------------------------------- |
+| Muse Spark            | pipeline, coach, API | Watch the video (frames and audio) or read the manual; find step ends; judge live steps; answer questions |
+| SAM 3.1               | pipeline, coach      | Ground each part in the expert's frames; check the parts are in the trainee's view                        |
+| Muse Image            | pipeline             | One clean, labelled diagram per step                                                                      |
+| Muse Voice Transcribe | API                  | The trainee's spoken questions, hands-free                                                                |
+| Muse Wonder           | pipeline, API        | Safety level per step (stop steps need acknowledging); review of every finished run                       |
 
 ## Meta adapters and credits
 
@@ -54,7 +65,7 @@ Apprentice turns instructions (a video, a manual, a help doc) into a verified st
 
 ## Pipeline
 
-`buildGuide` runs `draft_steps -> refine_boundaries -> reference_frames -> ground_parts`. Each stage's output is stored under `name@vN:<hash of input>`, so a rebuild reuses everything whose input did not change and never repeats paid work. Boundary refinement fixes the weak link found in spike 2: Muse Spark picks the first finished frame from dense frames around each drafted end, and a confident answer moves the end and the next step's start. Grounding uses SAM 3.1 on single reference frames per step rather than whole-video tracking, because identities fragment over long clips (spike 1).
+`buildGuide` runs `draft_steps -> refine_boundaries -> reference_frames -> ground_parts -> draw_diagrams -> review_safety`; a prepare step first downloads direct video links and extracts text from PDFs and help pages. Each stage's output is stored under `name@vN:<hash of input>`, so a rebuild reuses everything whose input did not change and never repeats paid work. Boundary refinement fixes the weak link found in spike 2: Muse Spark picks the first finished frame from dense frames around each drafted end, and a confident answer moves the end and the next step's start. Grounding uses SAM 3.1 on single reference frames per step rather than whole-video tracking, because identities fragment over long clips (spike 1).
 
 ## Coach state machine
 
@@ -87,3 +98,4 @@ Strict TypeScript, ESLint + Prettier, Vitest unit tests per package, Playwright 
 - ADR 0004: PWA first; native iOS (glassy, Liquid Glass style) and Android shells reuse core, coach and design tokens later.
 - ADR 0005: Postgres + pg-boss for jobs; R2 for media; Fly.io for api and worker.
 - ADR 0006: Request-hash cache and adapter modes (live, replay, fake).
+- ADR 0007: Unconfirmed Meta formats are isolated and probed; outbound fetches are guarded.

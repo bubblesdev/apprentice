@@ -46,9 +46,14 @@ export function memoryPersistence(): Persistence {
   };
 }
 
+/**
+ * Postgres for data. Builds go to pg-boss for apps/worker, or with `inlineJobs` run in this
+ * process: one machine and one volume run the whole backend.
+ */
 export async function postgresPersistence(
   connectionString: string,
   queues: readonly string[],
+  inlineJobs = false,
 ): Promise<Persistence> {
   const pool = new pg.Pool({ connectionString });
   await migrate(pool);
@@ -62,7 +67,8 @@ export async function postgresPersistence(
     artifacts: new PgArtifactStore(pool),
     recordUsage: (event) =>
       void usage.record(event).catch((e: unknown) => console.error("usage log", e)),
-    createQueue: async () => {
+    createQueue: async (handlers) => {
+      if (inlineJobs) return new InlineQueue(handlers);
       boss = await PgBossQueue.connect(connectionString, queues);
       const queue = boss;
       return {

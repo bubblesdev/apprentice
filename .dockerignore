@@ -1,0 +1,13 @@
+**/node_modules
+**/dist
+**/dev-dist
+.turbo
+.cache
+.data
+.env
+.env.*
+samples
+spike/out
+test-results
+playwright-report
+.git
