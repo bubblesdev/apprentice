@@ -1,3 +1,4 @@
+import { RunReport } from "@apprentice/core";
 import { describe, expect, it } from "vitest";
 import {
   startSession,
@@ -51,6 +52,7 @@ describe("buildReport", () => {
     expect(report.steps[0]?.caught.map((v) => v.kind)).toEqual(["wrong"]);
     expect(report.steps[1]?.closerRequests).toBe(1);
     expect(report.durationS).toBeGreaterThan(0);
+    expect(RunReport.parse(report)).toEqual(report);
   });
 
   it("marks the step a session ended on as failed and later ones as not reached", () => {

@@ -1,36 +1,6 @@
-import type { Guide, Session, Verdict } from "@apprentice/core";
+import type { Guide, RunReport, Session, StepReport, StepStatus, Verdict } from "@apprentice/core";
 
-/**
- * passed: verified on camera. unverified: confirmed by the trainee after the coach could not see
- * it. in_progress: the current step of a running session. failed: the session ended on this
- * step without a pass. not_reached: never started.
- */
-export type StepStatus = "passed" | "unverified" | "in_progress" | "failed" | "not_reached";
-
-export interface StepReport {
-  index: number;
-  title: string;
-  status: StepStatus;
-  /** The verdict that settled the step, if any. */
-  final?: Verdict;
-  /** Mistakes the coach caught on this step: wrong, skipped, not finished or unsafe. */
-  caught: Verdict[];
-  /** "Show me closer" requests on this step. */
-  closerRequests: number;
-}
-
-export interface RunReport {
-  sessionId: string;
-  guideId: string;
-  guideVersion: number;
-  complete: boolean;
-  passed: number;
-  unverified: number;
-  total: number;
-  caught: number;
-  durationS?: number;
-  steps: StepReport[];
-}
+export type { RunReport, StepReport, StepStatus } from "@apprentice/core";
 
 const CAUGHT = new Set<Verdict["kind"]>(["wrong", "skipped", "not_yet", "unsafe"]);
 
@@ -61,6 +31,7 @@ export function buildReport(guide: Pick<Guide, "steps">, session: Session): RunR
     sessionId: session.id,
     guideId: session.guideId,
     guideVersion: session.guideVersion,
+    startedAt: session.startedAt,
     complete: session.state === "complete",
     passed: steps.filter((s) => s.status === "passed").length,
     unverified: steps.filter((s) => s.status === "unverified").length,

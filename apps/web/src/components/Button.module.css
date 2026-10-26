@@ -1,0 +1,102 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: var(--touch-primary);
+  padding: 0 24px;
+  border-radius: var(--radius-pill);
+  border: 1px solid transparent;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    transform var(--motion-fast) var(--motion-ease),
+    background var(--motion-fast) var(--motion-ease),
+    opacity var(--motion-fast);
+}
+
+.button:active {
+  transform: scale(0.98);
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: default;
+  transform: none;
+}
+
+.block {
+  width: 100%;
+}
+
+.compact {
+  min-height: var(--touch-min);
+  padding: 0 16px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.primary {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+
+.primary:hover {
+  background: var(--color-accent-hover);
+  color: var(--color-on-accent);
+}
+
+.light {
+  background: var(--color-text);
+  color: var(--color-on-accent);
+}
+
+.light:hover {
+  color: var(--color-on-accent);
+}
+
+.secondary {
+  background: transparent;
+  border-color: var(--color-border-strong);
+  color: var(--color-text);
+}
+
+.secondary:hover {
+  color: var(--color-text);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.amber {
+  background: transparent;
+  border-color: var(--color-amber);
+  color: var(--color-amber-soft);
+}
+
+.coral {
+  background: var(--color-coral);
+  color: var(--color-on-accent);
+}
+
+.icon {
+  width: var(--touch-min);
+  height: var(--touch-min);
+  min-height: 0;
+  padding: 0;
+  flex-shrink: 0;
+  border-color: rgba(255, 255, 255, 0.1);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.icon:hover {
+  color: var(--color-text);
+}
+
+.glass {
+  background: var(--color-glass-light);
+  border-color: transparent;
+  backdrop-filter: blur(var(--blur-chip));
+  -webkit-backdrop-filter: blur(var(--blur-chip));
+}

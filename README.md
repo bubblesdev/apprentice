@@ -28,11 +28,11 @@ Hands-on know-how lives in a few experts' heads: servicing equipment, assembly, 
 | `packages/store`    | Postgres repositories and the pg-boss job queue                                                                          |
 | `apps/api`          | Hono HTTP + WebSocket API for guides and live coaching sessions                                                          |
 | `apps/worker`       | pg-boss worker that builds guides                                                                                        |
-| `apps/web`          | React PWA (next)                                                                                                         |
+| `apps/web`          | React + Vite PWA: home, building, guide, live coach, report                                                              |
 | `docs/`             | Architecture, decisions, plan and project context                                                                        |
 | `spike/`            | Day-1 feasibility experiments (Python) and their results                                                                 |
 
-Development: `pnpm install`, then `pnpm check` (lint, typecheck, tests). Set `TEST_DATABASE_URL` to also run the Postgres integration tests. Run the API with no key and no database: `pnpm build && pnpm --filter @apprentice/api start` (fake Meta adapters, recorded PS1 guide).
+Development: `pnpm install`, then `pnpm check` (lint, typecheck, tests). Set `TEST_DATABASE_URL` to also run the Postgres integration tests. Run the product with no key and no database: `pnpm build`, then `APPRENTICE_FAKE_JUDGE=pass pnpm --filter @apprentice/api start` and `pnpm --filter @apprentice/web dev`, and open http://localhost:5173 (fake Meta adapters, recorded PS1 guide).
 
 ## Built during the hackathon (log)
 
@@ -43,6 +43,7 @@ Development: `pnpm install`, then `pnpm check` (lint, typecheck, tests). Set `TE
 - **26 Oct 2026:** `eval` package and CLI: per-verdict precision and recall, coach gate metrics (pass rate, catch rate, false passes, false unsafe stops), threshold sweep and cost per guide and coaching minute; baseline from the recorded spike-2 runs in `docs/eval/baseline-spike2.md`.
 - **26 Oct 2026:** `apps/api` (Hono HTTP + WebSocket live coaching loop, shared zod wire contract, per-session budget caps) and `apps/worker` (pg-boss guide builds); `store` package with Postgres repositories and queue, tested against a real Postgres and pg-boss; ffmpeg frame extractor.
 - **26 Oct 2026:** ingest (video upload stored by content hash, direct video link download, pasted documents), build progress for the Building screen, reference and evidence frame endpoints, and a guard that only lets builds read local files from the uploads directory.
+- **26 Oct 2026:** `apps/web` PWA following the approved prototype: Home (video upload, direct link, written instructions, drag and drop), Building (live pipeline progress), Guide (expert frames, highlights, safety notes), Live coach (rear camera, glass step sheet, verify-then-advance with show me closer, retry and stop, voice prompts, haptics) and Report (score, featured catch, evidence strip); `ui` design tokens; walked end to end in a headless phone browser.
 
 ## Running the spike
 
