@@ -23,8 +23,15 @@ export const MetaEnv = z.object({
   META_CACHE_DIR: z.string().min(1).default(".cache/meta"),
   APPRENTICE_ADAPTERS: AdapterMode.default("auto"),
   APPRENTICE_FIXTURE_JOB: z.string().min(1).default("ps1_buttons"),
+  /**
+   * Fake mode only. `recorded` answers unrecorded frames (any live camera frame) with "unclear";
+   * `pass` answers them "done", so the coach UI can be walked end to end during development.
+   */
+  APPRENTICE_FAKE_JUDGE: z.enum(["recorded", "pass"]).default("recorded"),
 });
 export type MetaEnv = z.infer<typeof MetaEnv>;
+
+export const DEV_PASS_SENTENCE = "Development mode: every check passes. No model was called.";
 
 export interface MetaAdapters {
   mode: Exclude<AdapterMode, "auto">;
@@ -48,7 +55,15 @@ export async function createMetaAdapters(options: CreateAdaptersOptions): Promis
 
   if (mode === "fake") {
     const fixture = await loadJobFixture(env.APPRENTICE_FIXTURE_JOB, options.fixturesDir);
-    return { mode, reasoner: new FakeReasoner({ fixture }), segmenter: new FakeSegmenter(fixture) };
+    const judge =
+      env.APPRENTICE_FAKE_JUDGE === "pass"
+        ? () => ({ kind: "done" as const, confidence: 0.9, sentence: DEV_PASS_SENTENCE })
+        : undefined;
+    return {
+      mode,
+      reasoner: new FakeReasoner({ fixture, ...(judge ? { judge } : {}) }),
+      segmenter: new FakeSegmenter(fixture),
+    };
   }
 
   if (mode === "live" && !key) throw new Error("APPRENTICE_ADAPTERS=live needs META_MODEL_API_KEY");

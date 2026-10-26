@@ -23,11 +23,14 @@ Hands-on know-how lives in a few experts' heads: servicing equipment, assembly, 
 | `packages/core`  | Domain model and zod schemas (Guide, Step, Session, Verdict) and the ports the domain depends on |
 | `packages/meta`  | Muse Spark and SAM 3.1 adapters, request-hash cache, retries, cost meter, fixture-backed fakes   |
 | `packages/coach` | Live coach: verify-then-advance state machine, policy, step verifier, run report                 |
-| `apps/`          | Web app, API and worker (next)                                                                   |
+| `packages/store` | Postgres repositories and the pg-boss job queue                                                  |
+| `apps/api`       | Hono HTTP + WebSocket API for guides and live coaching sessions                                  |
+| `apps/worker`    | pg-boss worker that builds guides                                                                |
+| `apps/web`       | React PWA (next)                                                                                 |
 | `docs/`          | Architecture, decisions, plan and project context                                                |
 | `spike/`         | Day-1 feasibility experiments (Python) and their results                                         |
 
-Development: `pnpm install`, then `pnpm check` (lint, typecheck, tests).
+Development: `pnpm install`, then `pnpm check` (lint, typecheck, tests). Set `TEST_DATABASE_URL` to also run the Postgres integration tests. Run the API with no key and no database: `pnpm build && pnpm --filter @apprentice/api start` (fake Meta adapters, recorded PS1 guide).
 
 ## Built during the hackathon (log)
 
@@ -36,6 +39,7 @@ Development: `pnpm install`, then `pnpm check` (lint, typecheck, tests).
 - **26 Oct 2026:** `coach` package: pure verify-then-advance state machine and policy (two-sample agreement, required parts, show me closer, retry, unsafe stop, safety briefings, trainee override marked unverified), step verifier on the Meta ports, run report; exhaustive state and event tests.
 - **26 Oct 2026:** `pipeline` package: step draft, boundary refinement on dense frames around each drafted end, reference frames and SAM part grounding as idempotent stages keyed by a hash of their input; tested on the recorded PS1 job (a rebuild makes no model calls).
 - **26 Oct 2026:** `eval` package and CLI: per-verdict precision and recall, coach gate metrics (pass rate, catch rate, false passes, false unsafe stops), threshold sweep and cost per guide and coaching minute; baseline from the recorded spike-2 runs in `docs/eval/baseline-spike2.md`.
+- **26 Oct 2026:** `apps/api` (Hono HTTP + WebSocket live coaching loop, shared zod wire contract, per-session budget caps) and `apps/worker` (pg-boss guide builds); `store` package with Postgres repositories and queue, tested against a real Postgres and pg-boss; ffmpeg frame extractor.
 
 ## Running the spike
 

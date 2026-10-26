@@ -1,0 +1,25 @@
+{
+  "name": "@apprentice/worker",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Apprentice background worker: builds guides from pg-boss jobs.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "start": "node dist/main.js"
+  },
+  "dependencies": {
+    "@apprentice/core": "workspace:*",
+    "@apprentice/meta": "workspace:*",
+    "@apprentice/pipeline": "workspace:*",
+    "@apprentice/store": "workspace:*",
+    "pg": "^8.23.1",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.23.1"
+  }
+}

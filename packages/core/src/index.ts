@@ -5,3 +5,4 @@ export * from "./errors.js";
 export * from "./canonical.js";
 export * from "./infra.js";
 export type * from "./ports.js";
+export * from "./api.js";
