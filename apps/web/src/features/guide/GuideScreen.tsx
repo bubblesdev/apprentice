@@ -5,6 +5,7 @@ import { Button, IconButton, IconLink } from "../../components/Button";
 import { FrameImage } from "../../components/FrameImage";
 import { Icon } from "../../components/Icon";
 import { Footer, Screen, TopBar } from "../../components/Screen";
+import { GuideEditor } from "./GuideEditor";
 import { api, referenceFrameUrl } from "../../lib/api";
 import { cx } from "../../lib/cx";
 import { aboutMinutes, clock, plural, uniqueParts } from "../../lib/format";
@@ -81,7 +82,10 @@ function StepItem({
 export function GuideScreen() {
   const id = useParams().id ?? "";
   const navigate = useNavigate();
-  const guide = useResource(`guide:${id}`, () => api.guide(id));
+  const loaded = useResource(`guide:${id}`, () => api.guide(id));
+  const [edited, setEdited] = useState<Guide>();
+  const [editing, setEditing] = useState(false);
+  const guide = { ...loaded, data: edited ?? loaded.data };
   const [open, setOpen] = useState(0);
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState<string>();
@@ -114,6 +118,15 @@ export function GuideScreen() {
     }
   };
 
+  const approve = async () => {
+    setError(undefined);
+    try {
+      setEdited(await api.approve(id));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not approve");
+    }
+  };
+
   const share = async () => {
     const url = window.location.href;
     if (navigator.share)
@@ -121,18 +134,24 @@ export function GuideScreen() {
     else await navigator.clipboard?.writeText(url);
   };
 
-  return (
-    <Screen>
-      <TopBar
-        leading={<IconLink to="/" icon="back" label="Back to home" />}
-        trailing={<IconButton icon="share" label="Share guide" onClick={() => void share()} />}
-      />
+  const view = (
+    <>
       {guide.error && !g ? <p className={styles.error}>{guide.error.message}</p> : null}
       {g ? (
         <>
           <section className={styles.heading}>
             <h1>{g.title}</h1>
             <span className={styles.meta}>{meta}</span>
+            <span className={styles.status}>
+              <span className={cx(styles.chip, g.status === "approved" && styles.chipApproved)}>
+                {g.status === "approved" ? "Approved" : "Draft"} · v{g.version}
+              </span>
+              {g.status === "draft" ? (
+                <Button variant="secondary" compact onClick={() => void approve()}>
+                  Approve
+                </Button>
+              ) : null}
+            </span>
           </section>
           {warned ? (
             <div className={styles.warning} role="note">
@@ -173,6 +192,37 @@ export function GuideScreen() {
           {starting ? "Starting" : "Start coaching"}
         </Button>
       </Footer>
+    </>
+  );
+
+  return (
+    <Screen>
+      <TopBar
+        leading={<IconLink to="/" icon="back" label="Back to home" />}
+        title={editing ? "Editing" : ""}
+        trailing={
+          editing ? undefined : (
+            <span style={{ display: "flex", gap: 8 }}>
+              <Button variant="secondary" compact disabled={!g} onClick={() => setEditing(true)}>
+                Edit
+              </Button>
+              <IconButton icon="share" label="Share guide" onClick={() => void share()} />
+            </span>
+          )
+        }
+      />
+      {editing && g ? (
+        <GuideEditor
+          guide={g}
+          onCancel={() => setEditing(false)}
+          onSaved={(saved) => {
+            setEdited(saved);
+            setEditing(false);
+          }}
+        />
+      ) : (
+        view
+      )}
     </Screen>
   );
 }

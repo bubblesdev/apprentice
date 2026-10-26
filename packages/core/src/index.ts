@@ -7,3 +7,4 @@ export * from "./infra.js";
 export type * from "./ports.js";
 export * from "./api.js";
 export * from "./build-status.js";
+export * from "./guide-edit.js";

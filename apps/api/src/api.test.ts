@@ -199,3 +199,32 @@ describe.runIf(databaseUrl)("API on Postgres", () => {
     await rt.close();
   }, 20_000);
 });
+
+describe("guide editing", () => {
+  it("applies an edit, bumps the version and refuses a stale one", async () => {
+    const { app } = await runtime();
+    const patch = (body: unknown) =>
+      app.request("/guides/ps1-buttons", {
+        method: "PATCH",
+        body: JSON.stringify(body),
+        headers: { "Content-Type": "application/json" },
+      });
+    const steps = [
+      {
+        from: 1,
+        title: "Open the shell",
+        instruction: "Remove the six screws.",
+        doneWhen: "Shell open.",
+      },
+    ];
+    const res = await patch({ version: 1, title: "PS1 buttons", steps });
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({
+      version: 2,
+      title: "PS1 buttons",
+      steps: [{ index: 0, title: "Open the shell", startS: 28 }],
+    });
+    expect((await patch({ version: 1, title: "Again" })).status).toBe(409);
+    expect((await patch({ version: 2, steps: [] })).status).toBe(400);
+  });
+});

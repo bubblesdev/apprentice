@@ -148,3 +148,90 @@
   color: var(--color-coral-soft);
   font-size: var(--type-small-size);
 }
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--color-surface-raised);
+  color: var(--color-muted);
+}
+
+.chipApproved {
+  background: rgba(157, 184, 255, 0.14);
+  color: var(--color-accent);
+}
+
+.editor {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.editCard {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+.editHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.editHeader .number {
+  margin-right: auto;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--color-muted);
+}
+
+.input {
+  min-height: var(--touch-min);
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 16px;
+  resize: vertical;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.titleInput {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.footerRow {
+  display: flex;
+  gap: 10px;
+}
+
+.footerRow > * {
+  flex: 1;
+}
