@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { SourceKind } from "./guide.js";
-import { Session } from "./session.js";
+import { Session, Verdict } from "./session.js";
 
 /**
  * The wire contract between apps/web and apps/api. Both sides parse with these schemas, so a
@@ -79,3 +79,39 @@ export const ServerMessage = z.discriminatedUnion("type", [
   z.object({ type: z.literal("error"), message: z.string() }),
 ]);
 export type ServerMessage = z.infer<typeof ServerMessage>;
+
+/**
+ * passed: verified on camera. unverified: confirmed by the trainee after the coach could not see
+ * it. in_progress: the current step of a running session. failed: the session ended on this
+ * step without a pass. not_reached: never started.
+ */
+export const StepStatus = z.enum(["passed", "unverified", "in_progress", "failed", "not_reached"]);
+export type StepStatus = z.infer<typeof StepStatus>;
+
+export const StepReport = z.object({
+  index: z.number().int().nonnegative(),
+  title: z.string(),
+  status: StepStatus,
+  /** The verdict that settled the step, if any. */
+  final: Verdict.optional(),
+  /** Mistakes the coach caught on this step: wrong, skipped, not finished or unsafe. */
+  caught: z.array(Verdict),
+  /** "Show me closer" requests on this step. */
+  closerRequests: z.number().int().nonnegative(),
+});
+export type StepReport = z.infer<typeof StepReport>;
+
+export const RunReport = z.object({
+  sessionId: z.string(),
+  guideId: z.string(),
+  guideVersion: z.number().int().positive(),
+  complete: z.boolean(),
+  passed: z.number().int().nonnegative(),
+  unverified: z.number().int().nonnegative(),
+  total: z.number().int().nonnegative(),
+  caught: z.number().int().nonnegative(),
+  durationS: z.number().nonnegative().optional(),
+  startedAt: z.string().datetime(),
+  steps: z.array(StepReport),
+});
+export type RunReport = z.infer<typeof RunReport>;

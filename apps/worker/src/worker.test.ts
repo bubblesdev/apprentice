@@ -55,7 +55,9 @@ describe.runIf(url)("worker on Postgres and pg-boss", () => {
       (resolve) =>
         void queue.work(BUILD_GUIDE_JOB, async (p) => {
           await handlers[BUILD_GUIDE_JOB](p);
-          resolve();
+          // The queue is shared with other suites' jobs; wait for this test's guide.
+          if (typeof p === "object" && p !== null && "guideId" in p && p.guideId === "g1")
+            resolve();
         }),
     );
     await queue.enqueue(BUILD_GUIDE_JOB, payload);
