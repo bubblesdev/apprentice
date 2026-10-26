@@ -5,6 +5,8 @@ import {
   CreateGuideRequest,
   CreateSessionRequest,
   FramesRequest,
+  GuideEditRequest,
+  applyGuideEdit,
   ClientCoachEvent,
   type BuildStatusRepository,
   type FrameExtractor,
@@ -167,6 +169,18 @@ export function createApp(deps: AppDeps, app: Hono = new Hono()): Hono {
     };
     const jobId = await deps.queue.enqueue(BUILD_GUIDE_JOB, payload);
     return c.json({ guideId, jobId }, 202);
+  });
+
+  app.patch("/guides/:id", async (c) => {
+    const req = await body(c, GuideEditRequest);
+    if (req instanceof Response) return req;
+    const guide = await deps.guides.get(c.req.param("id"));
+    if (!guide) return c.json({ error: "Guide not found" }, 404);
+    const result = applyGuideEdit(guide, req);
+    if (!result.ok)
+      return c.json({ error: result.message }, result.reason === "invalid" ? 400 : 409);
+    await deps.guides.put(result.guide);
+    return c.json(result.guide);
   });
 
   app.post("/guides/:id/approve", async (c) => {

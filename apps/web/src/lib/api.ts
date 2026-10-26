@@ -7,6 +7,7 @@ import {
   ServerMessage,
   type ClientCoachEvent,
   type CreateGuideRequest,
+  type GuideEditRequest,
 } from "@apprentice/core";
 import { z } from "zod";
 
@@ -54,6 +55,10 @@ const MediaRef = z.object({ kind: z.literal("url"), url: z.string(), mime: z.str
 export const api = {
   guides: () => request("/guides", z.object({ guides: z.array(Guide) })).then((r) => r.guides),
   guide: (id: string) => request(`/guides/${encodeURIComponent(id)}`, Guide),
+  editGuide: (id: string, edit: GuideEditRequest) =>
+    request(`/guides/${encodeURIComponent(id)}`, Guide, { ...json(edit), method: "PATCH" }),
+  approve: (id: string) =>
+    request(`/guides/${encodeURIComponent(id)}/approve`, Guide, { method: "POST" }),
   build: (id: string) => request(`/guides/${encodeURIComponent(id)}/build`, BuildStatus),
   createGuide: (body: CreateGuideRequest) =>
     request("/guides", z.object({ guideId: z.string(), jobId: z.string() }), json(body)),

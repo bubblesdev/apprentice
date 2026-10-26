@@ -22,4 +22,6 @@ The coach talks to the API over a WebSocket (HTTP fallback). It samples frames o
 
 Logic lives in pure view models (`buildView`, `coachView`, `reportView`) with unit tests; components stay presentational.
 
-Not built yet: the guide editor (rename, reorder, delete steps), PDF and help-page import, spoken questions (Voice Transcribe), step diagrams (Muse Image).
+The Guide screen's Edit mode renames, rewords, reorders and deletes steps (each keeps its expert frames and parts) and saves a new draft version; Approve marks it ready.
+
+Not built yet: PDF and help-page import, spoken questions (Voice Transcribe), step diagrams (Muse Image).

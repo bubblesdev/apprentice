@@ -44,6 +44,7 @@ Development: `pnpm install`, then `pnpm check` (lint, typecheck, tests). Set `TE
 - **26 Oct 2026:** `apps/api` (Hono HTTP + WebSocket live coaching loop, shared zod wire contract, per-session budget caps) and `apps/worker` (pg-boss guide builds); `store` package with Postgres repositories and queue, tested against a real Postgres and pg-boss; ffmpeg frame extractor.
 - **26 Oct 2026:** ingest (video upload stored by content hash, direct video link download, pasted documents), build progress for the Building screen, reference and evidence frame endpoints, and a guard that only lets builds read local files from the uploads directory.
 - **26 Oct 2026:** `apps/web` PWA following the approved prototype: Home (video upload, direct link, written instructions, drag and drop), Building (live pipeline progress), Guide (expert frames, highlights, safety notes), Live coach (rear camera, glass step sheet, verify-then-advance with show me closer, retry and stop, voice prompts, haptics) and Report (score, featured catch, evidence strip); `ui` design tokens; walked end to end in a headless phone browser.
+- **26 Oct 2026:** guide editor: rename, reword, reorder and delete steps (each keeps its expert frames and parts), optimistic version check, approve; `PATCH /guides/:id`.
 
 ## Running the spike
 

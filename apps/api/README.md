@@ -17,6 +17,7 @@ Without `DATABASE_URL` everything is in memory and guide builds run inline. In f
 | `GET /guides/:id/frame?t=`              | Expert reference frame as JPEG (when the source video is on disk)                                    |
 | `POST /uploads`                         | Raw MP4, MOV or WebM body; stored by content hash; returns a media reference                         |
 | `GET /media/sessions/:id/frames/:n.jpg` | Evidence frames captured during a session                                                            |
+| `PATCH /guides/:id`                     | Edit a guide: name, step text, order, deletions; refuses a stale `version` with 409                  |
 | `POST /guides/:id/approve`              | Mark a draft approved (a rebuild never overwrites it)                                                |
 | `POST /sessions`                        | Start coaching a guide; returns a `CoachUpdate`                                                      |
 | `GET /sessions/:id`                     | Current `CoachUpdate`                                                                                |
