@@ -23,6 +23,12 @@ export interface JobQueue {
   enqueue(name: string, payload: unknown): Promise<string>;
 }
 
+/** Media bytes by key (R2 in production): live frames kept as evidence, extracted reference frames. */
+export interface MediaStore {
+  put(key: string, data: Uint8Array, mime: string): Promise<void>;
+  get(key: string): Promise<{ data: Uint8Array; mime: string } | undefined>;
+}
+
 /** In-memory repositories for tests and single-process development. */
 export class InMemoryGuideRepository implements GuideRepository {
   private readonly guides = new Map<string, Guide>();
@@ -49,5 +55,17 @@ export class InMemorySessionRepository implements SessionRepository {
 
   async put(session: Session): Promise<void> {
     this.sessions.set(session.id, session);
+  }
+}
+
+export class InMemoryMediaStore implements MediaStore {
+  private readonly items = new Map<string, { data: Uint8Array; mime: string }>();
+
+  async put(key: string, data: Uint8Array, mime: string): Promise<void> {
+    this.items.set(key, { data, mime });
+  }
+
+  async get(key: string): Promise<{ data: Uint8Array; mime: string } | undefined> {
+    return this.items.get(key);
   }
 }

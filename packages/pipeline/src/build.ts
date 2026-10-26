@@ -62,6 +62,7 @@ export async function buildGuide(
   const report = options.onProgress ?? (() => undefined);
   const artifacts: BuildResult["artifacts"] = {};
   const isVideo = input.source.kind !== "document" && !input.documentText;
+  const frameSource = input.frameSource ?? input.media;
 
   report({ stage: "draft_steps", state: "running" });
   const draftInput = input.documentText
@@ -83,7 +84,7 @@ export async function buildGuide(
     report({ stage: "refine_boundaries", state: "running" });
     const refined = await runStage(
       boundaryStage,
-      { media: input.media, durationS, steps, config: config.boundary },
+      { media: frameSource, durationS, steps, config: config.boundary },
       deps,
       store,
     );
@@ -127,7 +128,7 @@ export async function buildGuide(
     const grounded = await runStage(
       groundingStage,
       {
-        media: input.media,
+        media: frameSource,
         steps: steps.map((s, i) => ({ parts: s.parts, referenceTimesS: referenceTimesS[i] ?? [] })),
         config: config.grounding,
       },

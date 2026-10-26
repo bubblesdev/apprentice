@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MetaEnv, createMetaAdapters } from "./adapters.js";
+import { DEV_PASS_SENTENCE, MetaEnv, createMetaAdapters } from "./adapters.js";
 import { CacheMissError } from "./cache.js";
 import { FakeReasoner } from "./fake/index.js";
 import { SparkReasoner } from "./spark.js";
@@ -34,5 +34,17 @@ describe("createMetaAdapters", () => {
         live: [],
       }),
     ).rejects.toBeInstanceOf(CacheMissError);
+  });
+
+  it("can pass every unrecorded check in fake mode, for UI development only", async () => {
+    const { reasoner } = await createMetaAdapters({
+      env: MetaEnv.parse({ APPRENTICE_FAKE_JUDGE: "pass" }),
+    });
+    const verdict = await reasoner.judgeStep({
+      step: { title: "t", instruction: "i", doneWhen: "d" },
+      reference: [],
+      live: [{ kind: "bytes", mime: "image/jpeg", data: new Uint8Array([1]) }],
+    });
+    expect(verdict).toEqual({ kind: "done", confidence: 0.9, sentence: DEV_PASS_SENTENCE });
   });
 });

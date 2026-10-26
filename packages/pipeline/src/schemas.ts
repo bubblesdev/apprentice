@@ -31,6 +31,8 @@ export const PipelineInput = z.object({
   source: Source,
   /** The source video (or document file) as the models see it. */
   media: MediaRef,
+  /** Where frames are extracted from (a local file for ffmpeg) when it differs from `media`. */
+  frameSource: MediaRef.optional(),
   /** Extracted text for document sources; when present, steps are drafted from text. */
   documentText: z.string().optional(),
 });
