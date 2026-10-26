@@ -13,9 +13,14 @@ export const Evidence = z.object({
 });
 export type Evidence = z.infer<typeof Evidence>;
 
+/** Who settled a verdict: the coach policy from model evidence, or the trainee overriding it. */
+export const VerdictSource = z.enum(["policy", "trainee"]);
+export type VerdictSource = z.infer<typeof VerdictSource>;
+
 export const Verdict = z.object({
   stepIndex: z.number().int().nonnegative(),
   kind: VerdictKind,
+  decidedBy: VerdictSource.default("policy"),
   confidence: z.number().min(0).max(1),
   evidence: Evidence,
   at: z.string().datetime(),

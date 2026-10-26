@@ -18,13 +18,14 @@ Hands-on know-how lives in a few experts' heads: servicing equipment, assembly, 
 
 ## Repository
 
-| Path            | What it is                                                                                       |
-| --------------- | ------------------------------------------------------------------------------------------------ |
-| `packages/core` | Domain model and zod schemas (Guide, Step, Session, Verdict) and the ports the domain depends on |
-| `packages/meta` | Muse Spark and SAM 3.1 adapters, request-hash cache, retries, cost meter, fixture-backed fakes   |
-| `apps/`         | Web app, API and worker (next)                                                                   |
-| `docs/`         | Architecture, decisions, plan and project context                                                |
-| `spike/`        | Day-1 feasibility experiments (Python) and their results                                         |
+| Path             | What it is                                                                                       |
+| ---------------- | ------------------------------------------------------------------------------------------------ |
+| `packages/core`  | Domain model and zod schemas (Guide, Step, Session, Verdict) and the ports the domain depends on |
+| `packages/meta`  | Muse Spark and SAM 3.1 adapters, request-hash cache, retries, cost meter, fixture-backed fakes   |
+| `packages/coach` | Live coach: verify-then-advance state machine, policy, step verifier, run report                 |
+| `apps/`          | Web app, API and worker (next)                                                                   |
+| `docs/`          | Architecture, decisions, plan and project context                                                |
+| `spike/`         | Day-1 feasibility experiments (Python) and their results                                         |
 
 Development: `pnpm install`, then `pnpm check` (lint, typecheck, tests).
 
@@ -32,6 +33,7 @@ Development: `pnpm install`, then `pnpm check` (lint, typecheck, tests).
 
 - **26 Oct 2026:** idea; spike 1 (SAM 3.1 tracking + Muse Spark step split on a real repair video); spike 2 (per-step check); clickable UI prototype; architecture and decisions; monorepo scaffold with `core` and `meta` packages, tests and CI.
 - **26 Oct 2026:** `meta` adapters: Muse Spark reasoner (step draft, boundary refinement, strict-instructor step judge), SAM 3.1 segmenter, request-hash response cache (each real call paid once), retries, per-scope cost meter with a hard cap, and fakes that replay the recorded spike outputs.
+- **26 Oct 2026:** `coach` package: pure verify-then-advance state machine and policy (two-sample agreement, required parts, show me closer, retry, unsafe stop, safety briefings, trainee override marked unverified), step verifier on the Meta ports, run report; exhaustive state and event tests.
 
 ## Running the spike
 
