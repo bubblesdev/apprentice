@@ -1,4 +1,10 @@
-import { MetaApiError, type FilesApi, type ResponseResult, type ResponsesApi } from "./client.js";
+import {
+  MetaApiError,
+  type FilesApi,
+  type ResponseResult,
+  type ResponsesApi,
+  type TranscribeApi,
+} from "./client.js";
 
 export interface RetryOptions {
   /** Attempts in total, including the first. */
@@ -32,9 +38,9 @@ async function withBackoff<T>(fn: () => Promise<T>, options: RetryOptions): Prom
 }
 
 /** Retries rate limits, server errors and timeouts with exponential backoff (2 s, 4 s, 8 s). */
-export class RetryingMetaApi implements ResponsesApi, FilesApi {
+export class RetryingMetaApi implements ResponsesApi, FilesApi, TranscribeApi {
   constructor(
-    private readonly inner: ResponsesApi & FilesApi,
+    private readonly inner: ResponsesApi & FilesApi & TranscribeApi,
     private readonly options: RetryOptions = {},
   ) {}
 
@@ -44,5 +50,9 @@ export class RetryingMetaApi implements ResponsesApi, FilesApi {
 
   uploadFile(data: Uint8Array, filename: string, mime: string): Promise<string> {
     return withBackoff(() => this.inner.uploadFile(data, filename, mime), this.options);
+  }
+
+  transcribe(input: { model: string; data: Uint8Array; filename: string; mime: string }) {
+    return withBackoff(() => this.inner.transcribe(input), this.options);
   }
 }

@@ -11,6 +11,7 @@ export interface PanelActions {
   next: () => void;
   acknowledge: () => void;
   override: () => void;
+  ask: () => void;
 }
 
 interface Props {
@@ -90,9 +91,19 @@ export function CoachPanel({ panel, actions, busy, youSrc, expertSrc }: Props) {
               sentence={panel.note.sentence}
             />
           ) : null}
-          <Button block disabled={busy} onClick={actions.check}>
-            I&rsquo;m done, check it
-          </Button>
+          <div className={styles.doingRow}>
+            <Button block disabled={busy} onClick={actions.check}>
+              I&rsquo;m done, check it
+            </Button>
+            <button
+              type="button"
+              className={styles.mic}
+              aria-label="Ask a question"
+              onClick={actions.ask}
+            >
+              <Icon name="mic" size={22} strokeWidth={1.8} />
+            </button>
+          </div>
         </div>
       );
     case "verifying":

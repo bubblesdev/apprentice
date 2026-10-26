@@ -8,12 +8,14 @@ import type {
   VisionReasoner,
 } from "@apprentice/core";
 import type { FilesApi, ResponseResult, ResponsesApi } from "./client.js";
+import { ModelOutputError } from "./errors.js";
 import { parseModelJson } from "./json.js";
 import { imagePart, textPart, userTurn, videoPart, type ContentPart } from "./media.js";
 import type { CostMeter } from "./meter.js";
 import {
   DRAFT_FROM_VIDEO_PROMPT,
   draftFromDocumentPrompt,
+  answerPrompt,
   judgeStepPrompt,
   refineBoundaryPrompt,
 } from "./prompts.js";
@@ -96,6 +98,22 @@ export class SparkReasoner implements VisionReasoner {
     const { text } = await this.call("judge_step", content);
     const out = parseModelJson(text, SparkJudgement);
     return { kind: out.verdict, confidence: out.confidence, sentence: out.evidence };
+  }
+
+  async answer(input: {
+    step: StepBrief;
+    question: string;
+    live: Media[];
+  }): Promise<{ answer: string }> {
+    const frame = input.live.at(-1);
+    const content: ContentPart[] = [
+      textPart(answerPrompt(input.step, input.question, frame !== undefined)),
+      ...(frame ? [imagePart(frame)] : []),
+    ];
+    const { text } = await this.call("answer_question", content);
+    const answer = text.trim().slice(0, 600);
+    if (!answer) throw new ModelOutputError("Empty answer", text);
+    return { answer };
   }
 }
 

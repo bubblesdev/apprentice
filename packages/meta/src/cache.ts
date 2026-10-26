@@ -3,7 +3,13 @@ import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { canonicalJson } from "@apprentice/core";
 import { z } from "zod";
-import { ResponseImage, type FilesApi, type ResponseResult, type ResponsesApi } from "./client.js";
+import {
+  ResponseImage,
+  type FilesApi,
+  type ResponseResult,
+  type ResponsesApi,
+  type TranscribeApi,
+} from "./client.js";
 
 /** Key/value store for recorded model responses. Values are JSON. */
 export interface ResponseCache {
@@ -87,18 +93,19 @@ const CachedResponse = z.object({
   recordedAt: z.string(),
 });
 const CachedFile = z.object({ fileId: z.string(), recordedAt: z.string() });
+const CachedTranscript = z.object({ text: z.string(), recordedAt: z.string() });
 
 /**
  * Wraps a live client so each distinct request is paid for once: the first call is recorded,
  * later identical calls (in this process or a later run) replay the recording. Identical
  * requests in flight at the same time share one call. With no live client it only replays.
  */
-export class CachedMetaApi implements ResponsesApi, FilesApi {
+export class CachedMetaApi implements ResponsesApi, FilesApi, TranscribeApi {
   private readonly inFlight = new Map<string, Promise<ResponseResult>>();
 
   constructor(
     private readonly cache: ResponseCache,
-    private readonly live?: ResponsesApi & FilesApi,
+    private readonly live?: ResponsesApi & FilesApi & TranscribeApi,
   ) {}
 
   createResponse(body: Record<string, unknown>): Promise<ResponseResult> {
@@ -137,5 +144,15 @@ export class CachedMetaApi implements ResponsesApi, FilesApi {
     const fileId = await this.live.uploadFile(data, filename, mime);
     await this.cache.set(key, { fileId, recordedAt: new Date().toISOString() });
     return fileId;
+  }
+
+  async transcribe(input: { model: string; data: Uint8Array; filename: string; mime: string }) {
+    const key = `transcript-${sha256(input.data)}-${sha256(input.model).slice(0, 8)}`;
+    const hit = CachedTranscript.safeParse(await this.cache.get(key));
+    if (hit.success) return { text: hit.data.text, cached: true };
+    if (!this.live) throw new CacheMissError(key);
+    const { text } = await this.live.transcribe(input);
+    await this.cache.set(key, { text, recordedAt: new Date().toISOString() });
+    return { text, cached: false };
   }
 }

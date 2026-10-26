@@ -9,22 +9,25 @@ import {
   type RunReport,
   type StepVerifier,
 } from "@apprentice/coach";
-import type {
-  ClientCoachEvent,
-  Clock,
-  CoachUpdate,
-  DecisionView,
-  Guide,
-  GuideRepository,
-  Media,
-  MediaStore,
-  SessionRepository,
-  Step,
+import {
+  BudgetExceededError,
+  type ClientCoachEvent,
+  type Clock,
+  type CoachUpdate,
+  type DecisionView,
+  type Guide,
+  type GuideRepository,
+  type Media,
+  type MediaStore,
+  type SessionRepository,
+  type Step,
+  type Transcriber,
+  type VisionReasoner,
 } from "@apprentice/core";
 
 export class CoachError extends Error {
   constructor(
-    readonly code: "not_found" | "not_ready" | "invalid_event",
+    readonly code: "not_found" | "not_ready" | "invalid_event" | "unheard",
     message: string,
   ) {
     super(message);
@@ -35,12 +38,18 @@ export class CoachError extends Error {
 /** Expert reference frames for a step, for the judge to compare against. */
 export type ReferenceResolver = (guide: Guide, step: Step) => Promise<Media[]>;
 
+export interface SessionAdapters {
+  verifier: StepVerifier;
+  reasoner: VisionReasoner;
+  transcriber: Transcriber;
+}
+
 export interface CoachServiceDeps {
   guides: GuideRepository;
   sessions: SessionRepository;
   media: MediaStore;
-  /** One verifier per session, so each session is metered and capped on its own. */
-  verifierFor: (sessionId: string) => Promise<StepVerifier>;
+  /** Model adapters per session, so each session is metered and capped on its own. */
+  adaptersFor: (sessionId: string) => Promise<SessionAdapters>;
   references: ReferenceResolver;
   policy: CoachPolicy;
   clock: Clock;
@@ -88,6 +97,8 @@ export class CoachService {
   private readonly contexts = new Map<string, CoachContext>();
   private readonly guidesBySession = new Map<string, Guide>();
   private readonly queues = new Map<string, Promise<unknown>>();
+  /** The latest live frame per session, so an answer can look at the trainee's work. */
+  private readonly lastFrames = new Map<string, Media>();
   private frameCounter = 0;
 
   constructor(private readonly deps: CoachServiceDeps) {}
@@ -189,7 +200,9 @@ export class CoachService {
           return { key, media };
         }),
       );
-      const verifier = await this.deps.verifierFor(sessionId);
+      const latest = live.at(-1);
+      if (latest) this.lastFrames.set(sessionId, latest.media);
+      const { verifier } = await this.deps.adaptersFor(sessionId);
       const sample = await verifier.sample({
         step,
         reference: await this.deps.references(guide, step),
@@ -197,5 +210,42 @@ export class CoachService {
       });
       return this.apply(sessionId, guide, ctx, { type: "sample", sample });
     });
+  }
+
+  private async hear(transcriber: Transcriber, audio: Media): Promise<string> {
+    try {
+      return (await transcriber.transcribe(audio)).text;
+    } catch (error) {
+      if (error instanceof BudgetExceededError)
+        throw new CoachError(
+          "unheard",
+          "Voice questions are paused: this session's budget is used.",
+        );
+      throw new CoachError(
+        "unheard",
+        "I couldn't understand that recording. Try again, or type it.",
+      );
+    }
+  }
+
+  /** Answers a typed or spoken question about the current step. Does not change the coach state. */
+  async ask(
+    sessionId: string,
+    question: { text: string } | { audio: Media },
+  ): Promise<{ question: string; answer: string }> {
+    const { ctx, guide } = this.loaded(sessionId);
+    const step = guide.steps[ctx.session.stepIndex];
+    if (!step) throw new CoachError("not_found", "No current step");
+    const { reasoner, transcriber } = await this.deps.adaptersFor(sessionId);
+    const text = "text" in question ? question.text : await this.hear(transcriber, question.audio);
+    if (!text.trim())
+      throw new CoachError("unheard", "I couldn't hear a question. Try again, or type it.");
+    const frame = this.lastFrames.get(sessionId);
+    const { answer } = await reasoner.answer({
+      step: { title: step.title, instruction: step.instruction, doneWhen: step.doneWhen },
+      question: text,
+      live: frame ? [frame] : [],
+    });
+    return { question: text, answer };
   }
 }

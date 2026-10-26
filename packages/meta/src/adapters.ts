@@ -1,9 +1,16 @@
-import type { Illustrator, Segmenter, VisionReasoner } from "@apprentice/core";
+import type { Illustrator, Segmenter, Transcriber, VisionReasoner } from "@apprentice/core";
 import { z } from "zod";
 import { CachedMetaApi, FileResponseCache } from "./cache.js";
 import { DEFAULT_BASE_URL, MetaClient } from "./client.js";
-import { FakeIllustrator, FakeReasoner, FakeSegmenter, loadJobFixture } from "./fake/index.js";
+import {
+  FakeIllustrator,
+  FakeReasoner,
+  FakeSegmenter,
+  FakeTranscriber,
+  loadJobFixture,
+} from "./fake/index.js";
 import { MuseIllustrator } from "./illustrator.js";
+import { MuseTranscriber } from "./transcriber.js";
 import type { CostMeter } from "./meter.js";
 import { RetryingMetaApi } from "./retry.js";
 import { SamSegmenter } from "./sam-segmenter.js";
@@ -39,6 +46,7 @@ export interface MetaAdapters {
   reasoner: VisionReasoner;
   segmenter: Segmenter;
   illustrator: Illustrator;
+  transcriber: Transcriber;
 }
 
 export interface CreateAdaptersOptions {
@@ -66,6 +74,7 @@ export async function createMetaAdapters(options: CreateAdaptersOptions): Promis
       reasoner: new FakeReasoner({ fixture, ...(judge ? { judge } : {}) }),
       segmenter: new FakeSegmenter(fixture),
       illustrator: new FakeIllustrator(),
+      transcriber: new FakeTranscriber(),
     };
   }
 
@@ -83,5 +92,6 @@ export async function createMetaAdapters(options: CreateAdaptersOptions): Promis
     reasoner: new SparkReasoner(deps),
     segmenter: new SamSegmenter(deps),
     illustrator: new MuseIllustrator(deps),
+    transcriber: new MuseTranscriber(deps),
   };
 }

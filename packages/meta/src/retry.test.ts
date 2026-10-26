@@ -1,8 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { MetaApiError, type FilesApi, type ResponseResult, type ResponsesApi } from "./client.js";
+import {
+  MetaApiError,
+  type FilesApi,
+  type ResponseResult,
+  type ResponsesApi,
+  type TranscribeApi,
+} from "./client.js";
 import { RetryingMetaApi, isRetryable } from "./retry.js";
 
-function flaky(failures: unknown[]): ResponsesApi & FilesApi & { attempts: number } {
+function flaky(
+  failures: unknown[],
+): ResponsesApi & FilesApi & TranscribeApi & { attempts: number } {
   return {
     attempts: 0,
     async createResponse(): Promise<ResponseResult> {
@@ -14,6 +22,11 @@ function flaky(failures: unknown[]): ResponsesApi & FilesApi & { attempts: numbe
       const failure = failures[this.attempts++];
       if (failure) throw failure;
       return "file-1";
+    },
+    async transcribe() {
+      const failure = failures[this.attempts++];
+      if (failure) throw failure;
+      return { text: "hello" };
     },
   };
 }

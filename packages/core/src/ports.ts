@@ -52,6 +52,8 @@ export interface VisionReasoner {
     frames: TimedFrame[];
   }): Promise<BoundaryEstimate>;
   judgeStep(input: { step: StepBrief; reference: Media[]; live: Media[] }): Promise<StepJudgement>;
+  /** Answers a trainee's question about the current step, optionally looking at their latest frame. */
+  answer(input: { step: StepBrief; question: string; live: Media[] }): Promise<{ answer: string }>;
 }
 
 export interface Detection {
