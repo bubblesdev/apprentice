@@ -171,8 +171,9 @@ export class MetaClient implements ResponsesApi, FilesApi, TranscribeApi {
   }
 
   /**
-   * OpenAI-compatible transcription endpoint (multipart `file` + `model`), which Meta's
-   * OpenAI-SDK compatibility implies; confirm with the probe before the demo.
+   * Muse Voice Transcribe, confirmed by the probe on 27 Oct 2026 (ADR 0007): `POST /asr/transcribe`,
+   * multipart with a JSON `request` part (model, WAV encoding, push-to-talk) and a WAV `audio` part.
+   * The whole clip's text is in `transcript`.
    */
   async transcribe(input: {
     model: string;
@@ -181,15 +182,17 @@ export class MetaClient implements ResponsesApi, FilesApi, TranscribeApi {
     mime: string;
   }): Promise<{ text: string }> {
     const form = new FormData();
-    form.append("model", input.model);
-    form.append("file", new Blob([input.data], { type: input.mime }), input.filename);
-    const res = await this.fetchImpl(`${this.baseUrl}/audio/transcriptions`, {
+    const settings = { model: input.model, audioEncoding: "WAV", mode: "PUSH_TO_TALK" };
+    form.append("request", new Blob([JSON.stringify(settings)], { type: "application/json" }));
+    form.append("audio", new Blob([input.data], { type: input.mime }), input.filename);
+    const res = await this.fetchImpl(`${this.baseUrl}/asr/transcribe`, {
       method: "POST",
-      headers: this.headers(),
+      headers: this.headers({ Accept: "application/json" }),
       body: form,
       signal: AbortSignal.timeout(this.timeoutMs),
     });
     if (!res.ok) throw new MetaApiError(res.status, await res.text());
-    return z.object({ text: z.string() }).parse(await res.json());
+    const body = z.object({ transcript: z.string().default("") }).parse(await res.json());
+    return { text: body.transcript };
   }
 }
