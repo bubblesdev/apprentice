@@ -2,7 +2,7 @@ import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { searchArchive } from "./archive.js";
+import { parseDuration, searchArchive } from "./archive.js";
 import { attribution, type Candidate } from "./candidate.js";
 import { attributionMarkdown, collect, readManifest } from "./collect.js";
 import { searchCommons } from "./commons.js";
@@ -151,6 +151,51 @@ describe("searchArchive", () => {
       }),
     ]);
     expect(fetch.calls.some((u) => u.includes("metadata/nd-one"))).toBe(false);
+  });
+
+  it("reads clock-time lengths and the retired CC public domain dedication (real Archive data)", async () => {
+    const fetch = routes({
+      "https://archive.org/advancedsearch.php": () =>
+        json({
+          response: {
+            docs: [
+              {
+                identifier: "Woodwork1940",
+                title: "Woodworker, The",
+                licenseurl: "http://creativecommons.org/licenses/publicdomain/",
+              },
+            ],
+          },
+        }),
+      "https://archive.org/metadata/Woodwork1940": () =>
+        json({
+          files: [
+            { name: "a.mp4", format: "h.264", size: "5000", length: "10:41" },
+            { name: "a.ogv", format: "Ogg Video", size: "4000", length: "642.18" },
+            { name: "a.xml", format: "Metadata", size: "10" },
+          ],
+        }),
+    });
+    const r = await searchArchive("woodwork", { limit: 1, fetch });
+    expect(r.rejected).toEqual([]);
+    expect(r.candidates).toEqual([
+      expect.objectContaining({
+        id: "Woodwork1940",
+        licence: expect.objectContaining({ id: "PD" }),
+      }),
+    ]);
+  });
+});
+
+describe("parseDuration", () => {
+  it("accepts seconds and clock time, and ignores anything else", () => {
+    expect(parseDuration("642.44")).toBe(642.44);
+    expect(parseDuration("10:41")).toBe(641);
+    expect(parseDuration("1:02:03")).toBe(3723);
+    expect(parseDuration(12)).toBe(12);
+    expect(parseDuration("")).toBeUndefined();
+    expect(parseDuration("n/a")).toBeUndefined();
+    expect(parseDuration(undefined)).toBeUndefined();
   });
 });
 

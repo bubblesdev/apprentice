@@ -38,6 +38,8 @@ function fromUrl(raw: string): LicenceCheck | undefined {
   const c = code.toLowerCase();
   if (kind?.toLowerCase() === "publicdomain")
     return c === "zero" ? { ok: true, licence: make("CC0") } : { ok: true, licence: make("PD") };
+  // The retired CC public domain dedication, still used by Internet Archive items.
+  if (c === "publicdomain") return { ok: true, licence: make("PD") };
   if (c === "by") return { ok: true, licence: make("CC BY", version) };
   if (c === "by-sa") return { ok: true, licence: make("CC BY-SA", version) };
   return { ok: false, reason: `CC ${c.toUpperCase()} does not allow the reuse this needs` };
