@@ -8,6 +8,12 @@ export const LabelledCase = z.object({
   /** 0-based step index. */
   stepIndex: z.number().int().nonnegative(),
   label: VerdictKind,
+  /**
+   * synthetic: cut from the expert's own video (same camera and hands, so optimistic);
+   * recording: a person's labels on a real trainee recording (the gold standard);
+   * spike: the day-1 recordings.
+   */
+  origin: z.enum(["synthetic", "recording", "spike"]).optional(),
   predicted: z.object({
     kind: VerdictKind,
     /** Missing when the recording kept only the verdict (spike 2 run B). */
@@ -38,6 +44,7 @@ export function runsFromFixture(fixture: JobFixture): LabelledRun[] {
       id: `A-${j.step}-${j.case}`,
       stepIndex: j.step - 1,
       label: j.expected,
+      origin: "spike" as const,
       predicted: { kind: j.verdict, confidence: j.confidence, sentence: j.evidence },
     })),
   };
@@ -47,7 +54,8 @@ export function runsFromFixture(fixture: JobFixture): LabelledRun[] {
     cases: fixture.finishChecks.map((c) => ({
       id: `B-${c.step}-${c.case}`,
       stepIndex: c.step - 1,
-      label: c.case === "finished" ? "done" : "not_yet",
+      label: c.case === "finished" ? ("done" as const) : ("not_yet" as const),
+      origin: "spike" as const,
       predicted: { kind: c.verdict },
     })),
   };
