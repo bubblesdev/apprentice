@@ -1,7 +1,7 @@
 {
   "name": "@apprentice/eval",
   "version": "0.1.0",
-  "description": "Accuracy and cost harness for Apprentice: labelled runs to precision and recall per verdict, coach gate metrics, cost per guide and per coaching minute.",
+  "description": "Accuracy and cost harness for Apprentice: eval sets from guides and labelled recordings, a cached and capped runner, precision and recall per verdict, coach gate metrics, run comparison, cost per guide and per coaching minute.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
@@ -28,6 +28,7 @@
     "@apprentice/coach": "workspace:*",
     "@apprentice/core": "workspace:*",
     "@apprentice/meta": "workspace:*",
+    "@apprentice/pipeline": "workspace:*",
     "zod": "^3.23.8"
   }
 }
