@@ -6,6 +6,7 @@
  * script reports whether the adapters' parsers understand them.
  *
  *   META_MODEL_API_KEY=... pnpm --filter @apprentice/meta probe -- --yes-spend
+ *   ... probe -- --yes-spend --only=voice-transcribe   (re-check one model)
  *
  * Nothing runs without --yes-spend. The key is only sent as a header and never written.
  */
@@ -40,6 +41,16 @@ function toneWav(): Uint8Array {
   for (let i = 0; i < samples; i++)
     v.setInt16(44 + i * 2, Math.round(Math.sin((2 * Math.PI * 440 * i) / rate) * 8000), true);
   return new Uint8Array(buf);
+}
+
+/** Reads a response body once: parsed JSON when it is JSON, else the raw text. */
+async function readBody(res: Response): Promise<unknown> {
+  const text = await res.text();
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    return { raw: text };
+  }
 }
 
 interface ProbeResult {
@@ -80,7 +91,7 @@ async function main(): Promise<void> {
         input: [{ role: "user", content: [{ type: "input_text", text: prompt }] }],
       }),
     });
-    const body: unknown = await res.json().catch(async () => ({ text: await res.text() }));
+    const body = await readBody(res);
     await save(name, res.status, body);
     return { status: res.status, body };
   };
@@ -91,7 +102,9 @@ async function main(): Promise<void> {
       : [];
 
   const results: ProbeResult[] = [];
+  const only = process.argv.find((a) => a.startsWith("--only="))?.slice("--only=".length);
   const run = async (name: string, fn: () => Promise<ProbeResult>) => {
+    if (only && !only.split(",").includes(name)) return;
     try {
       results.push(await fn());
     } catch (error) {
@@ -139,23 +152,26 @@ async function main(): Promise<void> {
   });
   await run("voice-transcribe", async () => {
     const form = new FormData();
-    form.append("model", VOICE_TRANSCRIBE);
-    form.append("file", new Blob([toneWav()], { type: "audio/wav" }), "tone.wav");
-    const res = await fetch(`${base}/audio/transcriptions`, {
+    const settings = { model: VOICE_TRANSCRIBE, audioEncoding: "WAV", mode: "PUSH_TO_TALK" };
+    form.append("request", new Blob([JSON.stringify(settings)], { type: "application/json" }));
+    form.append("audio", new Blob([toneWav()], { type: "audio/wav" }), "tone.wav");
+    const res = await fetch(`${base}/asr/transcribe`, {
       method: "POST",
-      headers: auth,
+      headers: { ...auth, Accept: "application/json" },
       body: form,
     });
-    const body: unknown = await res.json().catch(async () => ({ text: await res.text() }));
+    const body = await readBody(res);
     await save("voice-transcribe", res.status, body);
     const hasText =
-      !!body && typeof body === "object" && typeof (body as { text?: unknown }).text === "string";
+      !!body &&
+      typeof body === "object" &&
+      typeof (body as { transcript?: unknown }).transcript === "string";
     return {
       name: "voice-transcribe",
       ok: res.status === 200 && hasText,
       status: res.status,
       note: hasText
-        ? "OpenAI-compatible /audio/transcriptions works"
+        ? "POST /asr/transcribe returns { transcript } (MetaClient.transcribe)"
         : "Endpoint or shape differs: see the saved response and MetaClient.transcribe",
     };
   });
