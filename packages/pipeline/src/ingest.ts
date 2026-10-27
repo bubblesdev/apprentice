@@ -17,6 +17,7 @@ const EXTENSIONS: Record<string, string> = {
   "video/mp4": "mp4",
   "video/quicktime": "mov",
   "video/webm": "webm",
+  "video/ogg": "ogv",
   "text/plain": "txt",
   "text/markdown": "md",
   "application/pdf": "pdf",
@@ -83,7 +84,7 @@ export async function ingestRemoteVideo(
   const { media, source } = payload;
   if (source.kind !== "video_url" || media.kind !== "url" || !/^https?:\/\//i.test(media.url))
     return payload;
-  const existing = ["mp4", "mov", "webm"]
+  const existing = ["mp4", "mov", "webm", "ogv"]
     .map((ext) =>
       join(opts.dir, `url-${createHash("sha256").update(media.url).digest("hex")}.${ext}`),
     )

@@ -26,4 +26,15 @@ node dist/cli.js compare run-before.json run-after.json
 
 Synthetic cases come from the expert's own video, so they share its camera and hands and score optimistically; they have no skip cases, because every step in the expert video really was done. Recording cases are the gold standard: done, skipped and wrong come from a person watching a real attempt.
 
+## Collecting open videos
+
+```bash
+node dist/cli.js collect --query "replace bike chain" --out ../../.cache/videos --dry-run
+node dist/cli.js collect --query "replace bike chain" --out ../../.cache/videos --max-mb 200
+```
+
+Searches Wikimedia Commons and Internet Archive and keeps only videos whose source states CC0, public domain, CC BY or CC BY-SA (NC, ND, GFDL-only and unknown licences are refused, and a CC BY video with no stated author is refused because it cannot be credited). Each download goes through `safeFetch`, is size-capped, named by its SHA-256, and recorded in `manifest.json` with title, author, licence, page and an attribution line; `ATTRIBUTION.md` is regenerated beside it. A dry run lists what would be kept and why the rest were left out. Collected videos stay out of git (`.cache/` is ignored); credit any you show in the demo.
+
+Turn a collected video into an eval set by building a guide from it in the app, then `set synth`, or by recording yourself following that guide and labelling the recording on `/lab`.
+
 A labelled run is `{ "name", "cases": [{ "id", "stepIndex", "label", "origin"?, "predicted": { "kind", "confidence"?, "sentence"? } }] }`. The baseline is in `docs/eval/baseline-spike2.md`.
