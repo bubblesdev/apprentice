@@ -1,4 +1,5 @@
 import { BUILD_GUIDE_JOB } from "@apprentice/pipeline";
+import { withoutBlankValues } from "@apprentice/core";
 import {
   PgArtifactStore,
   PgBossQueue,
@@ -10,7 +11,7 @@ import pg from "pg";
 import { WorkerEnv } from "./env.js";
 import { createHandlers } from "./worker.js";
 
-const env = WorkerEnv.parse(process.env);
+const env = WorkerEnv.parse(withoutBlankValues(process.env));
 const pool = new pg.Pool({ connectionString: env.DATABASE_URL });
 await migrate(pool);
 const usage = new PgUsageLog(pool);

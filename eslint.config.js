@@ -5,6 +5,7 @@ import tseslint from "typescript-eslint";
 export default tseslint.config(
   {
     ignores: [
+      ".cache/**",
       "**/dist/**",
       "**/dev-dist/**",
       "**/node_modules/**",

@@ -3,7 +3,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { CoachPolicy } from "@apprentice/coach";
-import { Guide, RecordingLabels } from "@apprentice/core";
+import { Guide, RecordingLabels, withoutBlankValues } from "@apprentice/core";
 import { CostMeter, MetaEnv, createMetaAdapters, tokenCost } from "@apprentice/meta";
 import { FakeFrameExtractor, loadJobFixture } from "@apprentice/meta/fake";
 import { FfmpegFrameExtractor } from "@apprentice/pipeline";
@@ -144,7 +144,7 @@ async function run(args: string[]): Promise<string> {
   const evalSet = await readJson(EvalSet, setPath ?? "");
   const capUsd = Number(values.cap);
   if (!Number.isFinite(capUsd) || capUsd <= 0) throw new Error("--cap must be a positive number");
-  const env = MetaEnv.parse(process.env);
+  const env = MetaEnv.parse(withoutBlankValues(process.env));
   const meter = new CostMeter({ scope: { kind: "eval", id: evalSet.name }, capUsd });
   const adapters = await createMetaAdapters({ env, meter });
   if (adapters.mode === "live" && !values["yes-spend"]) {
