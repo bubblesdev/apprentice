@@ -39,9 +39,13 @@ export function judgeStepPrompt(
     `\nThe first ${referenceCount} images show the EXPERT during and at the end of this step. ` +
     `The last ${liveCount} images show the TRAINEE right now. Decide whether the trainee has ` +
     "completed THIS step correctly. Compare the state of the parts, not the hands or camera " +
-    "angle. If the trainee is clearly past this step but there is no evidence this step was " +
-    "done, say skipped. If they have not reached it, say not_yet. If the frames do not show " +
-    "the parts clearly enough to decide, say unclear. If you see an immediate danger (live " +
+    "angle. The expert's last image is the finished state: if the trainee's parts are in that " +
+    "same state, say done, even when the work itself (a screw under the case, grease on a " +
+    "hidden face) is out of view. Judge mainly by the trainee's latest image. If the trainee " +
+    "is clearly past this step but there is no evidence this step was done, say skipped. If " +
+    "their parts are clearly in an earlier state than the expert's finished image, say " +
+    "not_yet. Say unclear only when the part that decides the step is hidden, blurred or out " +
+    "of frame. If you see an immediate danger (live " +
     "mains wiring, a hand in the path of a blade, a powered appliance being opened), say " +
     'unsafe. JSON only: {"verdict":"done|skipped|not_yet|wrong|unclear|unsafe",' +
     '"confidence":0-1,"evidence":"one sentence naming what you saw"}'
