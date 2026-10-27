@@ -34,7 +34,7 @@ const USAGE = `apprentice-eval <command>
                               by request hash, so a re-run is free; live calls need --yes-spend
                               and stop at the cap (US dollars).
   collect --query "bike chain" --out videos/ [--source commons|archive|both] [--limit 10]
-          [--max-mb 200] [--dry-run]
+          [--max-mb 200] [--dry-run] [--only commons:123,archive:item]
                               Openly licensed videos (CC0, public domain, CC BY, CC BY-SA only)
                               from Wikimedia Commons and Internet Archive, with a manifest and
                               ATTRIBUTION.md. Free.`;
@@ -186,9 +186,11 @@ async function collectVideos(args: string[]): Promise<string> {
       limit: { type: "string", default: "10" },
       "max-mb": { type: "string", default: "200" },
       "dry-run": { type: "boolean", default: false },
+      only: { type: "string" },
     },
   });
   const [query, out] = need(values, "query", "out");
+  const only = values.only ? new Set(values.only.split(",").map((id) => id.trim())) : undefined;
   const limit = Number(values.limit);
   const maxBytes = Number(values["max-mb"]) * 1e6;
   if (!Number.isInteger(limit) || limit < 1 || limit > 50)
@@ -209,7 +211,9 @@ async function collectVideos(args: string[]): Promise<string> {
       }
     }),
   );
-  const candidates = results.flatMap((r) => r.candidates);
+  const candidates = results
+    .flatMap((r) => r.candidates)
+    .filter((c) => !only || only.has(`${c.source}:${c.id}`));
   const lines = [
     `${candidates.length} reusable videos, ${results.reduce((n, r) => n + r.rejected.length, 0)} left out.`,
     ...results.flatMap((r) =>

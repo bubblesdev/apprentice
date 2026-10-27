@@ -30,7 +30,7 @@ Synthetic cases come from the expert's own video, so they share its camera and h
 
 ```bash
 node dist/cli.js collect --query "replace bike chain" --out ../../.cache/videos --dry-run
-node dist/cli.js collect --query "replace bike chain" --out ../../.cache/videos --max-mb 200
+node dist/cli.js collect --query "replace bike chain" --out ../../.cache/videos --max-mb 200 --only commons:123,archive:item-id
 ```
 
 Searches Wikimedia Commons and Internet Archive and keeps only videos whose source states CC0, public domain, CC BY or CC BY-SA (NC, ND, GFDL-only and unknown licences are refused, and a CC BY video with no stated author is refused because it cannot be credited). Each download goes through `safeFetch`, is size-capped, named by its SHA-256, and recorded in `manifest.json` with title, author, licence, page and an attribution line; `ATTRIBUTION.md` is regenerated beside it. A dry run lists what would be kept and why the rest were left out. Collected videos stay out of git (`.cache/` is ignored); credit any you show in the demo.
