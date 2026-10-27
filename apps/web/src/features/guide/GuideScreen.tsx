@@ -5,6 +5,7 @@ import { Button, IconButton, IconLink } from "../../components/Button";
 import { FrameImage } from "../../components/FrameImage";
 import { Icon } from "../../components/Icon";
 import { Footer, Screen, TopBar } from "../../components/Screen";
+import { ShareSheet } from "../share/ShareSheet";
 import { GuideEditor } from "./GuideEditor";
 import { api, evidenceFrameUrl, referenceFrameUrl } from "../../lib/api";
 import { cx } from "../../lib/cx";
@@ -120,6 +121,7 @@ export function GuideScreen() {
   const loaded = useResource(`guide:${id}`, () => api.guide(id));
   const [edited, setEdited] = useState<Guide>();
   const [editing, setEditing] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const insights = useResource(`insights:${id}`, () => api.insights(id).catch(() => undefined));
   const guide = { ...loaded, data: edited ?? loaded.data };
   const [open, setOpen] = useState(0);
@@ -162,13 +164,6 @@ export function GuideScreen() {
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not approve");
     }
-  };
-
-  const share = async () => {
-    const url = window.location.href;
-    if (navigator.share)
-      await navigator.share({ title: g?.title ?? "Apprentice guide", url }).catch(() => undefined);
-    else await navigator.clipboard?.writeText(url);
   };
 
   const view = (
@@ -248,7 +243,12 @@ export function GuideScreen() {
               <Button variant="secondary" compact disabled={!g} onClick={() => setEditing(true)}>
                 Edit
               </Button>
-              <IconButton icon="share" label="Share guide" onClick={() => void share()} />
+              <IconButton
+                icon="share"
+                label="Share guide"
+                disabled={!g}
+                onClick={() => setSharing(true)}
+              />
             </span>
           )
         }
@@ -265,6 +265,14 @@ export function GuideScreen() {
       ) : (
         view
       )}
+      {g ? (
+        <ShareSheet
+          open={sharing}
+          onClose={() => setSharing(false)}
+          guideId={g.id}
+          title={g.title}
+        />
+      ) : null}
     </Screen>
   );
 }

@@ -82,4 +82,22 @@ test.describe("Apprentice end to end", () => {
     await page.getByRole("button", { name: "End session" }).click();
     await expect(page.getByRole("heading", { name: /0 of \d+ steps verified/ })).toBeVisible();
   });
+
+  test("share a guide as a coaching link and QR code, and open it", async ({ page }) => {
+    await page.goto("/guides/ps1-buttons");
+    await page.getByRole("button", { name: "Share guide" }).click();
+    await expect(page.getByRole("img", { name: /QR code for .*\/c\/ps1-buttons/ })).toBeVisible();
+    await expect(page.getByText(/\/c\/ps1-buttons$/)).toBeVisible();
+    await page.screenshot({ path: "test-results/share-sheet.png" });
+
+    await page.goto("/c/ps1-buttons");
+    await expect(
+      page.getByRole("heading", { name: "Fix sticky PlayStation buttons" }),
+    ).toBeVisible();
+    await expect(page.getByText(/needs? a safety check/)).toBeVisible();
+    await page.screenshot({ path: "test-results/coach-link.png" });
+    await page.getByRole("button", { name: "Start coaching" }).click();
+    await expect(page).toHaveURL(/\/coach\//);
+    await expect(page.getByRole("button", { name: "Start this step" })).toBeVisible();
+  });
 });

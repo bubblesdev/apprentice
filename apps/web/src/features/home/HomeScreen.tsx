@@ -8,6 +8,7 @@ import { api, referenceFrameUrl } from "../../lib/api";
 import { cx } from "../../lib/cx";
 import { aboutMinutes, plural } from "../../lib/format";
 import { useResource } from "../../lib/useResource";
+import { InstallBanner } from "./InstallBanner";
 import { AddInstructionsSheet, type Pending, type SourceChoice } from "./AddInstructions";
 import styles from "./Home.module.css";
 
@@ -162,6 +163,8 @@ export function HomeScreen() {
         ))}
         <div className={styles.empty}>Your next guide appears here</div>
       </section>
+
+      <InstallBanner />
 
       <AddInstructionsSheet pending={pending} onClose={() => setPending(undefined)} />
     </Screen>

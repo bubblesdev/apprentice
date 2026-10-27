@@ -263,3 +263,38 @@ textarea.input {
   background: var(--color-surface-raised);
   color: var(--color-text);
 }
+
+.install {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 12px 12px 14px;
+}
+
+.installIcon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.installText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex-grow: 1;
+  min-width: 0;
+}
+
+.installTitle {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.installText svg {
+  vertical-align: -2px;
+}

@@ -20,6 +20,8 @@ pnpm --filter @apprentice/web dev            # app on :5173
 
 The coach talks to the API over a WebSocket (HTTP fallback). It samples frames only after the trainee says "I'm done", at the rate the server's policy sets, and stops sampling as soon as the step leaves verifying. Voice prompts use the browser's speech synthesis and can be muted; passes and stops vibrate where supported.
 
+Guides share as a coaching link and a QR code (Guide, Share). Home offers to install the app: Chrome's install prompt, or Safari's Add to Home Screen steps on iPhone.
+
 Logic lives in pure view models (`buildView`, `coachView`, `reportView`) with unit tests; components stay presentational.
 
 The Guide screen's Edit mode renames, rewords, reorders and deletes steps (each keeps its expert frames and parts) and saves a new draft version; Approve marks it ready.
