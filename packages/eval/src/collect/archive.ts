@@ -21,6 +21,17 @@ const SearchResponse = z.object({
   }),
 });
 
+/** Internet Archive file lengths come as seconds ("642.44") or clock time ("10:41", "1:02:03"). */
+export function parseDuration(raw: unknown): number | undefined {
+  if (typeof raw === "number") return Number.isFinite(raw) && raw >= 0 ? raw : undefined;
+  if (typeof raw !== "string" || raw.trim() === "") return undefined;
+  const parts = raw.trim().split(":").map(Number);
+  if (parts.some((n) => !Number.isFinite(n) || n < 0) || parts.length > 3) return undefined;
+  return parts.reduce((total, n) => total * 60 + n, 0);
+}
+
+const duration = z.unknown().transform(parseDuration);
+
 const MetadataResponse = z.object({
   files: z
     .array(
@@ -28,7 +39,7 @@ const MetadataResponse = z.object({
         name: z.string(),
         format: z.string().optional(),
         size: z.coerce.number().optional(),
-        length: z.coerce.number().optional(),
+        length: duration,
       }),
     )
     .default([]),
