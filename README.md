@@ -55,6 +55,7 @@ Development: `pnpm install`, then `pnpm check` (lint, typecheck, tests). Set `TE
 - **26 Oct 2026:** Muse Wonder: a safety review stage reads the whole guide and sets each step's level and note (the more severe of draft and review wins; a stop step needs acknowledging in the coach), and an audit of every finished run (summary, steps worth a second look, wording suggestions for the author) shown on the report. A labelled rule-based fallback stands in without credits.
 - **26 Oct 2026:** durable media (file store on a shared volume, Cloudflare R2 via signed S3 requests; keys checked so nothing escapes its folder) and guide insights: across runs of the current version, steps where trainees needed another try are flagged on the Guide screen for the author.
 - **26 Oct 2026:** Playwright end-to-end specs (add instructions, build, edit and approve, a full coached run, a question, an early end), one-machine deploy (Dockerfile, fly.toml, Cloudflare Pages fallback, `docs/DEPLOY.md`), and an opt-in probe that confirms the unverified Meta formats for about $0.02 (ADR 0007).
+- **27 Oct 2026:** sharing: a short coaching link (`/c/:guideId`) with its own landing page, a share sheet with a printable QR code, an install prompt (Chrome's prompt, or Safari's Add to Home Screen steps on iPhone) and PNG home-screen icons.
 
 ## Running the spike
 

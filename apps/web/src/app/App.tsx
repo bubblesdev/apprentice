@@ -6,6 +6,7 @@ import { CoachScreen } from "../features/coach/CoachScreen";
 import { GuideScreen } from "../features/guide/GuideScreen";
 import { HomeScreen } from "../features/home/HomeScreen";
 import { ReportScreen } from "../features/report/ReportScreen";
+import { CoachLinkScreen } from "../features/share/CoachLinkScreen";
 
 function NotFound() {
   return (
@@ -23,6 +24,7 @@ const router = createBrowserRouter([
   { path: "/guides/:id", element: <GuideScreen /> },
   { path: "/guides/:id/building", element: <BuildingScreen /> },
   { path: "/coach/:sessionId", element: <CoachScreen /> },
+  { path: "/c/:guideId", element: <CoachLinkScreen /> },
   { path: "/report/:sessionId", element: <ReportScreen /> },
   { path: "*", element: <NotFound /> },
 ]);
