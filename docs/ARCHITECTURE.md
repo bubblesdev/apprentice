@@ -34,7 +34,7 @@ Apprentice turns instructions (a video, a manual, a help doc) into a verified st
 | `packages/coach`    | Live session state machine, frame sampler policy, verifier, confidence policy, safety gates                             | core, ports                        |
 | `packages/store`    | Postgres repositories (guides, sessions, artifacts, usage events) and the pg-boss queue                                 | core                               |
 | `packages/ui`       | Design tokens, components, motion; web first, tokens reusable by native shells                                          | none                               |
-| `packages/eval`     | Labelled runs to precision/recall per verdict, cost per guide and per coaching minute                                   | core, coach                        |
+| `packages/eval`     | Eval sets and a cached, capped runner; precision/recall, gate metrics, run comparison, cost; open-video collector       | core, coach, meta, pipeline        |
 | `apps/api`          | Hono HTTP + WebSocket: guides, sessions, live verdict stream; in memory or on Postgres                                  | core, coach, meta, pipeline, store |
 | `apps/worker`       | Background jobs for the pipeline (pg-boss)                                                                              | pipeline, meta, store              |
 | `apps/web`          | React + Vite PWA: home, building, guide, coach, report                                                                  | core, ui                           |
@@ -76,7 +76,7 @@ briefing ─► doing(step) ─► verifying ─┬─► passed ─► doing(st
                                       └─► blocked  (unsafe: stop, explain, require acknowledgement)
 ```
 
-Advance only when the verifier says done with confidence >= threshold on two consecutive samples, and required parts are present (Segmenter). All thresholds live in one policy object (`CoachPolicy`) and are tuned by `packages/eval`. `decide` and `transition` in `packages/coach` are pure; `StepVerifier` is the only part that calls models. Stop-level safety steps open with a briefing; a trainee override after repeated closer requests is recorded as `decidedBy: "trainee"` and reported as unverified.
+Advance only when the verifier says done with confidence >= threshold on two consecutive samples, and required parts are present (Segmenter). All thresholds live in one policy object (`CoachPolicy`) and are tuned by `packages/eval`: eval sets come from a guide's own video or from a recording labelled on `/lab` (`RecordingLabels` in core), and each case is judged through the same `judgeStep` the live coach uses. `decide` and `transition` in `packages/coach` are pure; `StepVerifier` is the only part that calls models. Stop-level safety steps open with a briefing; a trainee override after repeated closer requests is recorded as `decidedBy: "trainee"` and reported as unverified.
 
 ## API contract
 

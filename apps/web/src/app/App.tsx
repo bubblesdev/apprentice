@@ -5,6 +5,7 @@ import { BuildingScreen } from "../features/building/BuildingScreen";
 import { CoachScreen } from "../features/coach/CoachScreen";
 import { GuideScreen } from "../features/guide/GuideScreen";
 import { HomeScreen } from "../features/home/HomeScreen";
+import { LabScreen } from "../features/lab/LabScreen";
 import { ReportScreen } from "../features/report/ReportScreen";
 import { CoachLinkScreen } from "../features/share/CoachLinkScreen";
 
@@ -26,6 +27,8 @@ const router = createBrowserRouter([
   { path: "/coach/:sessionId", element: <CoachScreen /> },
   { path: "/c/:guideId", element: <CoachLinkScreen /> },
   { path: "/report/:sessionId", element: <ReportScreen /> },
+  { path: "/lab", element: <LabScreen /> },
+  { path: "/lab/:guideId", element: <LabScreen /> },
   { path: "*", element: <NotFound /> },
 ]);
 

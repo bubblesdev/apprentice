@@ -56,6 +56,7 @@ Development: `pnpm install`, then `pnpm check` (lint, typecheck, tests). Set `TE
 - **26 Oct 2026:** durable media (file store on a shared volume, Cloudflare R2 via signed S3 requests; keys checked so nothing escapes its folder) and guide insights: across runs of the current version, steps where trainees needed another try are flagged on the Guide screen for the author.
 - **26 Oct 2026:** Playwright end-to-end specs (add instructions, build, edit and approve, a full coached run, a question, an early end), one-machine deploy (Dockerfile, fly.toml, Cloudflare Pages fallback, `docs/DEPLOY.md`), and an opt-in probe that confirms the unverified Meta formats for about $0.02 (ADR 0007).
 - **27 Oct 2026:** sharing: a short coaching link (`/c/:guideId`) with its own landing page, a share sheet with a printable QR code, an install prompt (Chrome's prompt, or Safari's Add to Home Screen steps on iPhone) and PNG home-screen icons.
+- **27 Oct 2026:** eval tooling, all free until James runs it with a key: eval sets from a guide's own video or from a labelled trainee recording, a runner that judges each case through the coach's own check (cached, capped, refuses live calls without `--yes-spend`), a before-and-after comparison, an open-video collector for Wikimedia Commons and Internet Archive that keeps only CC0, public domain, CC BY and CC BY-SA videos with their credits, and an eval lab page (`/lab`) for marking where each step ended in a recording.
 
 ## Running the spike
 
