@@ -4,3 +4,4 @@ export * from "./metrics.js";
 export * from "./report.js";
 export * from "./runner.js";
 export * from "./sets.js";
+export * from "./collect/index.js";

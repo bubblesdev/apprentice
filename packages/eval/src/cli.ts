@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { readFile, writeFile } from "node:fs/promises";
-import { resolve } from "node:path";
+import { join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { CoachPolicy } from "@apprentice/coach";
 import { Guide, RecordingLabels } from "@apprentice/core";
@@ -8,6 +8,14 @@ import { CostMeter, MetaEnv, createMetaAdapters, tokenCost } from "@apprentice/m
 import { FakeFrameExtractor, loadJobFixture } from "@apprentice/meta/fake";
 import { FfmpegFrameExtractor } from "@apprentice/pipeline";
 import type { z } from "zod";
+import {
+  attributionMarkdown,
+  collect,
+  readManifest,
+  searchArchive,
+  searchCommons,
+  type SearchResult,
+} from "./collect/index.js";
 import { LabelledRun, runsFromFixture } from "./labelled.js";
 import { compareReport, costReport, runReport } from "./report.js";
 import { runEvalSet } from "./runner.js";
@@ -24,7 +32,12 @@ const USAGE = `apprentice-eval <command>
   run --set set.json --out run.json [--cap 1] [--yes-spend]
                               Judges every case with Muse Spark, like the coach. Calls are cached
                               by request hash, so a re-run is free; live calls need --yes-spend
-                              and stop at the cap (US dollars).`;
+                              and stop at the cap (US dollars).
+  collect --query "bike chain" --out videos/ [--source commons|archive|both] [--limit 10]
+          [--max-mb 200] [--dry-run]
+                              Openly licensed videos (CC0, public domain, CC BY, CC BY-SA only)
+                              from Wikimedia Commons and Internet Archive, with a manifest and
+                              ATTRIBUTION.md. Free.`;
 
 const readJson = async <T extends z.ZodTypeAny>(schema: T, path: string): Promise<z.infer<T>> =>
   schema.parse(JSON.parse(await readFile(path, "utf8")));
@@ -163,6 +176,69 @@ async function run(args: string[]): Promise<string> {
     .join("\n");
 }
 
+async function collectVideos(args: string[]): Promise<string> {
+  const { values } = parseArgs({
+    args,
+    options: {
+      query: { type: "string" },
+      out: { type: "string" },
+      source: { type: "string", default: "both" },
+      limit: { type: "string", default: "10" },
+      "max-mb": { type: "string", default: "200" },
+      "dry-run": { type: "boolean", default: false },
+    },
+  });
+  const [query, out] = need(values, "query", "out");
+  const limit = Number(values.limit);
+  const maxBytes = Number(values["max-mb"]) * 1e6;
+  if (!Number.isInteger(limit) || limit < 1 || limit > 50)
+    throw new Error("--limit must be 1 to 50");
+  if (!Number.isFinite(maxBytes) || maxBytes <= 0) throw new Error("--max-mb must be positive");
+  const sources = values.source === "both" ? ["commons", "archive"] : [values.source];
+  const results: SearchResult[] = await Promise.all(
+    sources.map(async (s) => {
+      const search = s === "commons" ? searchCommons : s === "archive" ? searchArchive : undefined;
+      if (!search) throw new Error("--source must be commons, archive or both");
+      try {
+        return await search(query ?? "", { limit });
+      } catch (error) {
+        const why = error instanceof Error ? error.message : String(error);
+        throw new Error(
+          `Could not search ${s === "commons" ? "Wikimedia Commons" : "Internet Archive"}: ${why}`,
+        );
+      }
+    }),
+  );
+  const candidates = results.flatMap((r) => r.candidates);
+  const lines = [
+    `${candidates.length} reusable videos, ${results.reduce((n, r) => n + r.rejected.length, 0)} left out.`,
+    ...results.flatMap((r) =>
+      r.rejected.map((x) => `  left out ${x.source}:${x.id} "${x.title}": ${x.reason}`),
+    ),
+  ];
+  if (values["dry-run"]) {
+    lines.push(
+      ...candidates.map(
+        (c) =>
+          `  ${c.source}:${c.id} "${c.title}" (${c.licence.id}, ${c.sizeBytes ? `${Math.round(c.sizeBytes / 1e6)} MB` : "size unknown"})`,
+      ),
+    );
+    return lines.join("\n");
+  }
+  const dir = resolve(out ?? "");
+  const added = await collect(candidates, {
+    dir,
+    maxBytes,
+    onSkip: (c, why) => process.stderr.write(`skipped ${c.source}:${c.id}: ${why}\n`),
+  });
+  const manifest = await readManifest(dir);
+  await writeFile(join(dir, "ATTRIBUTION.md"), attributionMarkdown(manifest));
+  lines.push(
+    `Downloaded ${added.length}; ${manifest.videos.length} in ${dir}/manifest.json and ATTRIBUTION.md.`,
+  );
+  return lines.join("\n");
+}
+
 async function compare(files: string[]): Promise<string> {
   const [before, after] = files;
   if (!before || !after) throw new Error(USAGE);
@@ -181,6 +257,8 @@ async function main([command, ...rest]: string[]): Promise<string> {
       return set(rest);
     case "run":
       return run(rest);
+    case "collect":
+      return collectVideos(rest);
     case "help":
     case "--help":
       return USAGE;
