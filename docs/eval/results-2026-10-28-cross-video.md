@@ -45,3 +45,13 @@ About $0.52: the guide build was about $0.41 (Spark $0.17, SAM $0.10, Image $0.0
 
 - One change: the brand rule in the judge prompt. Re-run this set and the 90 synthetic cases, about $0.90 in total, for a before and after.
 - Gold set: James's air fryer recordings, which add the skip, wrong-orientation and unsafe cases. The model run (28 s, 4K) is in `samples/gold/airfryer-model-run.MOV`, which is not committed.
+
+## Brand rule, re-run on the 90 synthetic cases (28 Oct, commit 130a272)
+
+| Gate at 0.8             | Before (27 Oct prompt) | After (brand rule) |
+| ----------------------- | ---------------------- | ------------------ |
+| Pass rate (target 85%)  | 76%                    | 73%                |
+| Catch rate (target 90%) | 79%                    | 79%                |
+| False passes (target 0) | 12                     | 12                 |
+
+At 0.9 the new run gives 58% / 84% / 9; at 0.95, 30% / 93% / 4. Seven cases changed, three better and four worse. This is run-to-run noise: within one video there are no brand differences for the rule to fix, and it caused no regression. Kept. The 14 cross-video cases (where the SSD brand case lives) were not re-run, to stay inside the $0.90 approved; they need about $0.12 more. Cost: $0.82.
