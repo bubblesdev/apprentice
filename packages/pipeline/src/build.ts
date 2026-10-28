@@ -238,6 +238,7 @@ export async function buildGuide(
       startS: s.startS,
       endS: s.endS,
       doneWhen: s.doneWhen,
+      ...(s.showMe ? { showMe: s.showMe } : {}),
       parts: parts[index] ?? [],
       referenceTimesS: referenceTimesS[index] ?? [],
       safety: mergeSafety(safetyOf(s), reviewed[index]),

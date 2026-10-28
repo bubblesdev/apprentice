@@ -23,6 +23,7 @@ export const StepDraftSchema = z.object({
   parts: z.array(z.string()),
   doneWhen: z.string().min(1),
   warning: z.string().optional(),
+  showMe: z.string().optional(),
   safety: SafetyLevel.optional(),
 });
 

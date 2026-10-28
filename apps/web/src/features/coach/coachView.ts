@@ -37,8 +37,13 @@ function list(names: readonly string[]): string {
   return `${names.slice(0, -1).join(", ")} and ${names.at(-1) ?? ""}`;
 }
 
-function closerTitle(reason: string | undefined, missing: readonly string[]): string {
+function closerTitle(
+  reason: string | undefined,
+  missing: readonly string[],
+  showMe: string | undefined,
+): string {
   if (reason === "parts_missing" && missing[0]) return `Show me the ${missing[0]}`;
+  if ((reason === "unclear" || reason === "low_confidence") && showMe) return showMe;
   if (reason === "model_error") return "I couldn't check that";
   if (reason === "unavailable") return "Checking is paused";
   return "Show me closer";
@@ -96,7 +101,7 @@ export function coachView(update: CoachUpdate, steps: readonly Step[]): CoachVie
         spoken: "Looks right.",
       };
     case "closer": {
-      const title = closerTitle(decision?.reason, decision?.missingParts ?? []);
+      const title = closerTitle(decision?.reason, decision?.missingParts ?? [], step?.showMe);
       const text =
         decision?.reason === "unavailable"
           ? "The check budget for this session is used. You can confirm steps yourself."

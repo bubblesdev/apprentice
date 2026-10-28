@@ -17,6 +17,8 @@ export interface StepDraft {
   parts: string[];
   doneWhen: string;
   warning?: string | undefined;
+  /** A request for the view that shows the finished state, when the usual view cannot. */
+  showMe?: string | undefined;
   /** The model's own safety call; the pipeline falls back to "caution" when only a warning exists. */
   safety?: SafetyLevel | undefined;
 }

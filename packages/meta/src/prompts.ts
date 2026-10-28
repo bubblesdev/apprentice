@@ -8,8 +8,10 @@ import type { StepBrief } from "@apprentice/core";
 const STEP_FIELDS =
   "For each step return start_s, end_s, title, instruction (one imperative sentence for a " +
   "beginner), parts_and_tools (short noun phrases), visible_check (what must be visible when " +
-  "the step is done correctly), warning (empty if none) and safety (none, caution, or stop when " +
-  "the step involves mains electricity, gas, blades, heat or pressure).";
+  "the step is done correctly), warning (empty if none), safety (none, caution, or stop when " +
+  "the step involves mains electricity, gas, blades, heat or pressure) and check_view (empty " +
+  "unless the finished state can only be seen from another side: then a short request such as " +
+  '"Turn it over so I can see the bottom").';
 
 /** From spike 1, extended with instruction and safety fields. */
 export const DRAFT_FROM_VIDEO_PROMPT =
@@ -45,7 +47,9 @@ export function judgeStepPrompt(
     "is clearly past this step but there is no evidence this step was done, say skipped. If " +
     "their parts are clearly in an earlier state than the expert's finished image, say " +
     "not_yet. Say unclear only when the part that decides the step is hidden, blurred or out " +
-    "of frame. If you see an immediate danger (live " +
+    "of frame. Parts are judged by kind, position and orientation, not by brand or model: a part " +
+    "of the same kind from another maker is fine. Say wrong only for the wrong kind of part, " +
+    "the wrong place or the wrong way round. If you see an immediate danger (live " +
     "mains wiring, a hand in the path of a blade, a powered appliance being opened), say " +
     'unsafe. JSON only: {"verdict":"done|skipped|not_yet|wrong|unclear|unsafe",' +
     '"confidence":0-1,"evidence":"one sentence naming what you saw"}'
@@ -112,8 +116,9 @@ export function safetyReviewPrompt(
     JSON.stringify(steps.map((s, i) => ({ step: i + 1, ...s }))) +
     "\nFor every step, in the same order, give a safety level: stop when the step involves mains " +
     "electricity, gas, blades, heat, pressure or harmful chemicals and the beginner must confirm a " +
-    "precaution first; caution for smaller risks (sharp edges, small parts, pinch points); none " +
-    "otherwise. Give a short imperative note for stop and caution (for example: Unplug the console " +
+    "precaution first; caution only when this step itself has a real risk a beginner might miss " +
+    "(sharp metal edges, springs, small parts that can be lost, a real pinch point); none for " +
+    "looking, lifting, placing or sliding ordinary parts. Give a short imperative note for stop and caution (for example: Unplug the console " +
     'first). JSON only: {"steps":[{"level":"none|caution|stop","note":"..."}]}'
   );
 }

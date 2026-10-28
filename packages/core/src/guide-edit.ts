@@ -20,6 +20,8 @@ export const GuideEditRequest = z.object({
         doneWhen: z.string().trim().min(1).max(1000),
         /** Empty clears the note; the safety level is kept unless the note is cleared. */
         safetyNote: z.string().trim().max(500).optional(),
+        /** The view to ask for when the finished state is out of sight. Empty clears it. */
+        showMe: z.string().trim().max(160).optional(),
       }),
     )
     .min(1)
@@ -58,8 +60,11 @@ export function applyGuideEdit(guide: Guide, edit: GuideEditRequest): GuideEditR
       used.add(s.from);
       const note = s.safetyNote === undefined ? original.safety.note : s.safetyNote || undefined;
       const level = s.safetyNote === "" ? "none" : original.safety.level;
+      const { showMe: originalShowMe, ...rest } = original;
+      const showMe = s.showMe === undefined ? originalShowMe : s.showMe || undefined;
       next.push({
-        ...original,
+        ...rest,
+        ...(showMe ? { showMe } : {}),
         index,
         title: s.title,
         instruction: s.instruction,

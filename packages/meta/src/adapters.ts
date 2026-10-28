@@ -22,7 +22,7 @@ import { WonderAuditor } from "./wonder.js";
 import type { CostMeter } from "./meter.js";
 import { RetryingMetaApi } from "./retry.js";
 import { SamSegmenter } from "./sam-segmenter.js";
-import { SparkReasoner } from "./spark.js";
+import { ReasoningEffort, SparkReasoner } from "./spark.js";
 
 /**
  * - live: real Meta calls, each distinct request recorded in the cache and paid for once.
@@ -44,6 +44,8 @@ export const MetaEnv = z.object({
    * `pass` answers them "done", so the coach UI can be walked end to end during development.
    */
   APPRENTICE_FAKE_JUDGE: z.enum(["recorded", "pass"]).default("recorded"),
+  /** Muse Spark reasoning level for live step checks (minimal, low, medium, high). Unset: model default. */
+  JUDGE_REASONING_EFFORT: ReasoningEffort.optional(),
 });
 export type MetaEnv = z.infer<typeof MetaEnv>;
 
@@ -99,7 +101,10 @@ export async function createMetaAdapters(options: CreateAdaptersOptions): Promis
   const deps = { api, files: api, ...(meter ? { meter } : {}) };
   return {
     mode,
-    reasoner: new SparkReasoner(deps),
+    reasoner: new SparkReasoner({
+      ...deps,
+      ...(env.JUDGE_REASONING_EFFORT ? { judgeEffort: env.JUDGE_REASONING_EFFORT } : {}),
+    }),
     segmenter: new SamSegmenter(deps),
     illustrator: new MuseIllustrator(deps),
     transcriber: new MuseTranscriber(deps),

@@ -74,6 +74,15 @@ How to record about 5 attempts:
 5. Open `http://localhost:5173/lab`, pick the guide, load each video, mark where each step ended and whether it was done, skipped or wrong, then download the labels JSON next to the video.
 6. Then run `set from-labels`, `run --cap 1 --yes-spend` (about $0.01 per case) and `report`, and sweep `passConfidence`.
 
+## Fixes made on 28 Oct (code only, not yet measured live)
+
+- **Judge, brand rule:** parts are judged by kind, position and orientation, not by brand or model. In the cross-video eval a Micron SSD was called `wrong` against an SK hynix one.
+- **Judge, reasoning level:** `JUDGE_REASONING_EFFORT` (minimal, low, medium, high) sets Muse Spark's `reasoning.effort` on step checks only. It is unset by default until measured.
+- **Parts:** the coach now requires only the parts SAM found in the expert's finished frame (the last reference). A part seen only earlier, like a battery that was removed, is no longer required.
+- **"Show me":** the draft prompt asks for `check_view` when the finished state is only visible from another side. It is kept as `Step.showMe`, can be edited, and becomes the coach's closer request ("Turn it over so I can see the bottom").
+- **Safety review:** caution is now only for real risks a beginner might miss, not for looking, lifting, placing or sliding ordinary parts.
+- **Air fryer guide** (in-memory API, saved to `.cache/eval/airfryer.guide.json`): step 5 now says to put the plate back the same way up. The needless cautions on steps 3 to 5 are cleared.
+
 ## Open problems
 
 1. Live check latency is about 15 to 20 s. Try `reasoning: { effort: "low" }` on the judge call. It's one change, measured on the same 90 cases for cost, latency and accuracy.

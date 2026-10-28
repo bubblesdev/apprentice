@@ -164,3 +164,30 @@ describe("StepVerifier failure handling", () => {
     );
   });
 });
+
+describe("StepVerifier.groundedParts", () => {
+  const step = (sightings: Record<string, number[]>, referenceTimesS: number[]) =>
+    Step.parse({
+      index: 0,
+      title: "Remove the battery",
+      instruction: "Lift the battery out.",
+      startS: 0,
+      endS: 10,
+      doneWhen: "Bay empty.",
+      referenceTimesS,
+      parts: Object.entries(sightings).map(([name, ts]) => ({
+        name,
+        sightings: ts.map((t) => ({ t, box })),
+      })),
+    });
+
+  it("requires only parts seen in the expert's finished frame", () => {
+    const s = step({ battery: [6, 8], "battery bay": [8, 10], screwdriver: [] }, [6, 8, 10]);
+    expect(StepVerifier.groundedParts(s)).toEqual(["battery bay"]);
+  });
+
+  it("falls back to any sighting when the step has no reference times", () => {
+    const s = step({ battery: [6], screwdriver: [] }, []);
+    expect(StepVerifier.groundedParts(s)).toEqual(["battery"]);
+  });
+});
