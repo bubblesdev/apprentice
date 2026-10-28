@@ -41,13 +41,24 @@ const COULD_NOT_CHECK: StepJudgement = {
 export class StepVerifier {
   constructor(private readonly deps: StepVerifierDeps) {}
 
-  /** Parts worth checking live: only those SAM could find in the expert's frames. */
-  static groundedParts(step: Pick<Step, "parts">): string[] {
-    return step.parts.filter((p) => p.sightings.length > 0).map((p) => p.name);
+  /**
+   * Parts worth checking live: those SAM found in the expert's finished state (the last
+   * reference frame). A part seen only earlier in the step may be gone by the end (a battery
+   * that was removed), so it is never required.
+   */
+  static groundedParts(step: Pick<Step, "parts" | "referenceTimesS">): string[] {
+    const last = step.referenceTimesS.length ? Math.max(...step.referenceTimesS) : undefined;
+    return step.parts
+      .filter((p) =>
+        last === undefined
+          ? p.sightings.length > 0
+          : p.sightings.some((s) => Math.abs(s.t - last) < 0.01),
+      )
+      .map((p) => p.name);
   }
 
   async sample(input: {
-    step: Pick<Step, "title" | "instruction" | "doneWhen" | "parts">;
+    step: Pick<Step, "title" | "instruction" | "doneWhen" | "parts" | "referenceTimesS">;
     reference: Media[];
     live: LiveFrame[];
   }): Promise<Sample> {

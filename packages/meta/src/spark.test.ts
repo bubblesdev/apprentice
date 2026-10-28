@@ -105,6 +105,27 @@ describe("SparkReasoner.draftSteps", () => {
   });
 });
 
+describe("SparkReasoner.draftSteps check_view", () => {
+  it("keeps a requested view as showMe and drops an empty one", async () => {
+    const api = new StubMetaApi([
+      {
+        text:
+          '{"steps":[{"start_s":0,"end_s":5,"title":"Remove screws","visible_check":"No screws",' +
+          '"check_view":"Turn it over so I can see the bottom"},' +
+          '{"start_s":5,"end_s":9,"title":"Lift cover","visible_check":"Cover off","check_view":""}]}',
+      },
+    ]);
+    const drafts = await new SparkReasoner({ api }).draftSteps(
+      { kind: "url", url: "https://cdn/v.mp4", mime: "video/mp4" },
+      { documentText: "x" },
+    );
+    expect(drafts.map((d) => d.showMe)).toEqual([
+      "Turn it over so I can see the bottom",
+      undefined,
+    ]);
+  });
+});
+
 describe("SparkReasoner.judgeStep", () => {
   it("sends the strict-instructor prompt with reference frames before live frames", async () => {
     const api = new StubMetaApi([
@@ -128,6 +149,16 @@ describe("SparkReasoner.judgeStep", () => {
     expect(content[1]).toEqual({ type: "input_image", image_url: "data:image/jpeg;base64,/9j/" });
     expect(content[3]).toEqual({ type: "input_image", image_url: "https://cdn/ref.jpg" });
     expect(api.bodies[0]?.model).toBe("muse-spark-1.3");
+  });
+
+  it("sends a reasoning level on step checks only, and only when one is set", async () => {
+    const reply = '{"verdict":"done","confidence":0.95,"evidence":"Socket empty."}';
+    const api = new StubMetaApi([{ text: reply }, { text: "Unplug it first." }, { text: reply }]);
+    const low = new SparkReasoner({ api, judgeEffort: "low" });
+    await low.judgeStep({ step, reference: [jpeg], live: [jpeg] });
+    await low.answer({ step, question: "What first?", live: [] });
+    await new SparkReasoner({ api }).judgeStep({ step, reference: [jpeg], live: [jpeg] });
+    expect(api.bodies.map((b) => b?.reasoning)).toEqual([{ effort: "low" }, undefined, undefined]);
   });
 
   it("meters tokens, and records a cache hit at zero cost", async () => {

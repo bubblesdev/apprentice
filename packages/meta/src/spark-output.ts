@@ -11,6 +11,7 @@ export const SparkStep = z.object({
   visible_check: z.string().min(1),
   warning: z.string().optional(),
   safety: SafetyLevel.optional().catch(undefined),
+  check_view: z.string().optional().catch(undefined),
 });
 export type SparkStep = z.infer<typeof SparkStep>;
 
@@ -22,6 +23,7 @@ export function toStepDrafts(steps: SparkStep[]): StepDraft[] {
     .sort((a, b) => a.start_s - b.start_s)
     .map((s) => {
       const warning = s.warning?.trim();
+      const showMe = s.check_view?.trim().slice(0, 160);
       return {
         title: s.title.trim(),
         instruction: s.instruction?.trim() || s.title.trim(),
@@ -30,6 +32,7 @@ export function toStepDrafts(steps: SparkStep[]): StepDraft[] {
         parts: s.parts_and_tools.map((p) => p.trim()).filter(Boolean),
         doneWhen: s.visible_check.trim(),
         ...(warning ? { warning } : {}),
+        ...(showMe ? { showMe } : {}),
         ...(s.safety ? { safety: s.safety } : {}),
       };
     });

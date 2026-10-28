@@ -7,6 +7,7 @@ import type {
   TimedFrame,
   VisionReasoner,
 } from "@apprentice/core";
+import { z } from "zod";
 import type { FilesApi, ResponseResult, ResponsesApi } from "./client.js";
 import { ModelOutputError } from "./errors.js";
 import { parseModelJson } from "./json.js";
@@ -23,12 +24,18 @@ import { SparkBoundary, SparkJudgement, SparkStepsOutput, toStepDrafts } from ".
 
 export const MUSE_SPARK = "muse-spark-1.3";
 
+/** Meta's reasoning levels that Muse Spark accepts ("none" returns 400). */
+export const ReasoningEffort = z.enum(["minimal", "low", "medium", "high"]);
+export type ReasoningEffort = z.infer<typeof ReasoningEffort>;
+
 export interface SparkReasonerOptions {
   api: ResponsesApi;
   /** Needed only to upload raw video bytes. */
   files?: FilesApi;
   meter?: CostMeter;
   model?: string;
+  /** Reasoning level for live step checks only; unset leaves it to the model. */
+  judgeEffort?: ReasoningEffort;
 }
 
 /** VisionReasoner on Muse Spark: drafts steps from a video or document, refines boundaries, judges steps. */
@@ -39,11 +46,16 @@ export class SparkReasoner implements VisionReasoner {
     this.model = options.model ?? MUSE_SPARK;
   }
 
-  private async call(operation: string, content: ContentPart[]): Promise<ResponseResult> {
+  private async call(
+    operation: string,
+    content: ContentPart[],
+    effort?: ReasoningEffort,
+  ): Promise<ResponseResult> {
     this.options.meter?.assertWithinBudget();
     const result = await this.options.api.createResponse({
       model: this.model,
       input: userTurn(content),
+      ...(effort ? { reasoning: { effort } } : {}),
     });
     this.options.meter?.record(
       operation,
@@ -95,7 +107,7 @@ export class SparkReasoner implements VisionReasoner {
       ...input.reference.map(imagePart),
       ...input.live.map(imagePart),
     ];
-    const { text } = await this.call("judge_step", content);
+    const { text } = await this.call("judge_step", content, this.options.judgeEffort);
     const out = parseModelJson(text, SparkJudgement);
     return { kind: out.verdict, confidence: out.confidence, sentence: out.evidence };
   }

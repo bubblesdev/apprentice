@@ -83,6 +83,27 @@ describe("applyGuideEdit", () => {
     ]);
   });
 
+  it("sets, keeps and clears the view to ask for", () => {
+    const set = applyGuideEdit(guide, {
+      version: 3,
+      steps: [edit(0, "Open", { showMe: "Turn it over" }), edit(1, "Grease"), edit(2, "Close")],
+    });
+    if (!set.ok) throw new Error(set.message);
+    expect(set.guide.steps[0]?.showMe).toBe("Turn it over");
+    const kept = applyGuideEdit(set.guide, {
+      version: 4,
+      steps: [edit(0, "Open again"), edit(1, "Grease"), edit(2, "Close")],
+    });
+    if (!kept.ok) throw new Error(kept.message);
+    expect(kept.guide.steps[0]?.showMe).toBe("Turn it over");
+    const cleared = applyGuideEdit(kept.guide, {
+      version: 5,
+      steps: [edit(0, "Open", { showMe: "" }), edit(1, "Grease"), edit(2, "Close")],
+    });
+    if (!cleared.ok) throw new Error(cleared.message);
+    expect(cleared.guide.steps[0]).not.toHaveProperty("showMe");
+  });
+
   it("refuses a stale version, a duplicate or missing step, and a guide still building", () => {
     expect(applyGuideEdit(guide, { version: 2 })).toMatchObject({ ok: false, reason: "stale" });
     expect(

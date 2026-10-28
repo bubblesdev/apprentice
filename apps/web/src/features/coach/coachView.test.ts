@@ -89,6 +89,21 @@ describe("coachView", () => {
     expect(v.panel).toMatchObject({ kind: "closer", title, canOverride: true });
   });
 
+  it("asks for the step's own view when the finished state is out of sight", () => {
+    const withView = steps.map((s, i) =>
+      i === 0 ? { ...s, showMe: "Turn it over so I can see the bottom" } : s,
+    );
+    const v = coachView(
+      update("closer", {
+        decision: { kind: "closer", sentence: "x", reason: "unclear", missingParts: [] },
+        canOverride: false,
+      }),
+      withView,
+    );
+    expect(v.panel).toMatchObject({ title: "Turn it over so I can see the bottom" });
+    expect(v.spoken).toBe("Turn it over so I can see the bottom");
+  });
+
   it("uses coral for mistakes and unsafe stops", () => {
     const wrong = coachView(
       update("retry", { decision: { kind: "retry", sentence: "Thick blob.", reason: "wrong" } }),
