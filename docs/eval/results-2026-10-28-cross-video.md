@@ -55,3 +55,18 @@ About $0.52: the guide build was about $0.41 (Spark $0.17, SAM $0.10, Image $0.0
 | False passes (target 0) | 12                     | 12                 |
 
 At 0.9 the new run gives 58% / 84% / 9; at 0.95, 30% / 93% / 4. Seven cases changed, three better and four worse. This is run-to-run noise: within one video there are no brand differences for the rule to fix, and it caused no regression. Kept. The 14 cross-video cases (where the SSD brand case lives) were not re-run, to stay inside the $0.90 approved; they need about $0.12 more. Cost: $0.82.
+
+## Brand rule, re-run on the 14 cross-video cases
+
+| Gate at 0.8  | Before | After |
+| ------------ | ------ | ----- |
+| Pass rate    | 57%    | 29%   |
+| Catch rate   | 86%    | 100%  |
+| False passes | 1      | 0     |
+
+- **No false passes now.** r4-start, the battery-cable case passed at 0.8 before, is now `not_yet`.
+- **The SSD is no longer called `wrong` for its brand.** The new verdict is `skipped`, because frames 145 to 150 s show the drive out of its slot next to benchmark overlays. That is a labelling error on our side, not a brand error.
+- **Two "cover still on" cases are now `unclear`** ("the battery bay is hidden") instead of `not_yet`. The coach asks for a closer look instead of saying not finished. That is safe, but less helpful.
+- **The pass-rate drop is mostly the labels.** r4-done is labelled at 78 s, where the judge says the cable is still seated, so the label is probably early, like r3-done. r6-done is `unclear` because the RAM chips are too small in a wide view. My labels came from frames 5 seconds apart, so 14 cases are too few and too noisy to tune on. Kept the rule. James's air fryer clips decide the threshold.
+
+Cost: $0.14.
