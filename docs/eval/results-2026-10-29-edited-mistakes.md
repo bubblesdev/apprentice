@@ -1,0 +1,72 @@
+# More laptop pairs and edited mistakes: 29 Oct 2026
+
+James asked for no more home recordings, so this uses downloaded videos only. Mistakes come from Muse Image edits of real trainee frames.
+
+## What was tested
+
+- **New cross-video pairs** (LaptopMedia, CC BY 3.0, Wikimedia Commons; credited in each set's `attribution`):
+  - Dell Latitude 7450 guide (from 28 Oct), Dell Latitude 3550 as the trainee: 5 cases.
+  - New guide from "How to open HP ProBook 460 G11" (8 steps, 24 references, 3 of 20 parts grounded, 8 diagrams), HP ProBook 440 G11 as the trainee: 7 cases.
+- **Edited mistakes:** a real frame, edited by Muse Image to show one mistake, keeping everything else. Each edit was checked by eye and one that did not show its mistake was dropped. Every mistake has a "no change" control: the same frame sent through Muse Image with no change, to check that re-rendering alone does not make the coach fail a step.
+  - Air fryer (James's own clip; the trainee frames come from the expert video itself, so these are optimistic): plate upside down, plug back in the socket, basket left open, plate still in the basket.
+  - Dell 7455 trainee: battery put back, SSD removed, SSD unseated.
+  - HP 440 trainee: battery put back.
+- **Settings:** `passConfidence` 0.8, the judge with the brand rule (commit 130a272).
+
+## Results (26 cases)
+
+| Group                  | Cases | Agree | Missed                                                    |
+| ---------------------- | ----- | ----- | --------------------------------------------------------- |
+| Cross-video, Dell 3550 | 5     | 5     |                                                           |
+| Cross-video, HP 440    | 7     | 6     | `hp-ram-open`: shield half lifted, judged not_yet at 0.90 |
+| Edited mistakes        | 8     | 6     | **2 false passes** (below)                                |
+| No-change controls     | 6     | 6     | `af-ctrl-4` done at only 0.75, so the coach asks closer   |
+
+- **Not-finished states, real frames:** 5 of 5 caught.
+- **Finished states, real frames:** 6 of 7 recognised. The miss may be a label a second too early.
+- **Edited mistakes:** 6 of 8 caught. `d-ssd-loose` was called not_yet instead of wrong, which still stops the trainee.
+- **Controls:** 6 of 6 judged done, so Muse Image re-rendering alone does not make steps fail. One sits below the 0.8 gate.
+
+### The two false passes
+
+1. **`af-upside`, plate upside down: done at 0.90.** The judge said the plate rests flat in the basket and never checked which way up it was. The expert's finished frames show the plate mostly hidden under a hand, so there was little to compare against. This is a real weakness: orientation mistakes are a headline case for the demo. A 0.9 threshold would not stop it either.
+2. **`d-bat-back`, battery put back: done at 0.97.** The edit drew a small black pad over the touchpad, not a full-width battery, and the judge saw an empty bay. This is a weak edit, not a clear judge error. The HP version of the same mistake, with a convincing full-width battery, was caught at 0.96.
+
+## What it shows
+
+1. **Across laptop models the coach is strong on clear state changes** (cover on or off, battery in or out): 11 of 12 real cross-video cases agree, with no false passes.
+2. **Orientation is the gap.** "Done" is judged from where a part is, not which way round it is, when the reference frame doesn't show the part clearly.
+3. **Edited frames work as a mistake source** when each edit is checked by eye. 12 of 14 edits showed the intended mistake.
+
+## Next
+
+- One change for orientation: when a step's finished state depends on which way a part faces, the guide stores what the right side looks like ("feet down, holes up"), and the judge must confirm it or say unclear. Re-run these 26 cases for a before and after.
+- More edited mistakes on orientation and wrong parts, to measure the change on more than one case.
+
+## Cost
+
+About $0.77: the HP guide about $0.40, 16 Muse Image edits $0.16, 26 checks $0.21. Every call is cached in `.cache/meta`.
+
+## Orientation rule, re-run (same day)
+
+Correction first: the set has 26 cases, not 30 (12 real, 8 edited mistakes, 6 controls).
+
+**Change:** the judge must find the cue that shows which way a part faces before saying done, and say wrong if it faces the other way or unclear if the cue is hidden; lying flat in the right place is not enough. The draft prompt now asks `visible_check` to name that cue for parts that can go in the wrong way round.
+
+| Gate at 0.8                 | Before | After |
+| --------------------------- | ------ | ----- |
+| Real cross-video agree (12) | 11     | 11    |
+| Edited mistakes caught (8)  | 6      | 6     |
+| Controls passed (6)         | 5      | 5     |
+| False passes                | 2      | 2     |
+
+- `hp-ram-open` is now recognised as done (0.85). `hp-bat-in` moved from not_yet to unclear, which still stops the trainee. `af-ctrl-4` moved from done at 0.75 to unclear: the hand really does hide the plate there.
+- **`af-upside` is not a valid test.** Muse Image did not flip James's plate: it drew a different one (square grid with posts; the real plate is round with a radial pattern). The judge saw a plate lying flat and could not know its orientation. **`d-bat-back`** is also a weak edit (above). Leaving both out, there are no false passes before or after.
+- **So orientation is still untested.** Edits that redraw a part can't produce a fair wrong-way-round case. That needs real footage of a part fitted the wrong way.
+- The rule is kept: it fixed one miss, it made no new false passes, and the two new unclear answers are safe. A guessed orientation cue for the air fryer plate was tried and reverted, because the plate's real underside has not been seen.
+
+Cost: $0.21.
+
+## Upside-down plate, second attempt
+
+Muse Image was given the in-basket frame (21 s) and a frame showing the plate's other side (17 s), and asked to flip the real plate. The result is not usable: the hand still covers the plate and the visible part is a vague shape, not the plate flipped. It was not judged. The underlying limit: in James's clip the hand covers the plate in every frame where it sits in the basket, so the guide has no reference that shows which side is up. A fair orientation test needs footage where the part's facing side is visible when fitted. Cost: $0.02.

@@ -1,0 +1,88 @@
+import {
+  InMemoryBuildStatusRepository,
+  InMemoryGuideRepository,
+  InMemorySessionRepository,
+  type BuildStatusRepository,
+  type GuideRepository,
+  type JobQueue,
+  type SessionRepository,
+  type UsageEvent,
+} from "@apprentice/core";
+import { MemoryArtifactStore, type ArtifactStore } from "@apprentice/pipeline";
+import {
+  PgArtifactStore,
+  PgBossQueue,
+  PgBuildStatusRepository,
+  PgGuideRepository,
+  PgSessionRepository,
+  PgUsageLog,
+  migrate,
+} from "@apprentice/store";
+import pg from "pg";
+import { InlineQueue, type JobHandler } from "./inline-queue.js";
+
+export interface Persistence {
+  kind: "memory" | "postgres";
+  guides: GuideRepository;
+  sessions: SessionRepository;
+  builds: BuildStatusRepository;
+  artifacts: ArtifactStore;
+  recordUsage: (event: UsageEvent) => void;
+  /** Paid spend recorded at or after an ISO time, across every scope. */
+  spentSince: (at: string) => Promise<number>;
+  /** In memory, jobs run inline in this process; with Postgres they go to pg-boss for apps/worker. */
+  createQueue(handlers: Record<string, JobHandler>): Promise<JobQueue & { idle(): Promise<void> }>;
+  close(): Promise<void>;
+}
+
+export function memoryPersistence(): Persistence {
+  return {
+    kind: "memory",
+    guides: new InMemoryGuideRepository(),
+    sessions: new InMemorySessionRepository(),
+    builds: new InMemoryBuildStatusRepository(),
+    artifacts: new MemoryArtifactStore(),
+    recordUsage: () => undefined,
+    spentSince: () => Promise.resolve(0),
+    createQueue: async (handlers) => new InlineQueue(handlers),
+    close: async () => undefined,
+  };
+}
+
+/**
+ * Postgres for data. Builds go to pg-boss for apps/worker, or with `inlineJobs` run in this
+ * process: one machine and one volume run the whole backend.
+ */
+export async function postgresPersistence(
+  connectionString: string,
+  queues: readonly string[],
+  inlineJobs = false,
+): Promise<Persistence> {
+  const pool = new pg.Pool({ connectionString });
+  await migrate(pool);
+  const usage = new PgUsageLog(pool);
+  let boss: PgBossQueue | undefined;
+  return {
+    kind: "postgres",
+    guides: new PgGuideRepository(pool),
+    sessions: new PgSessionRepository(pool),
+    builds: new PgBuildStatusRepository(pool),
+    artifacts: new PgArtifactStore(pool),
+    recordUsage: (event) =>
+      void usage.record(event).catch((e: unknown) => console.error("usage log", e)),
+    spentSince: (at) => usage.spentSince(at),
+    createQueue: async (handlers) => {
+      if (inlineJobs) return new InlineQueue(handlers);
+      boss = await PgBossQueue.connect(connectionString, queues);
+      const queue = boss;
+      return {
+        enqueue: (name, payload) => queue.enqueue(name, payload),
+        idle: async () => undefined,
+      };
+    },
+    close: async () => {
+      await boss?.stop();
+      await pool.end();
+    },
+  };
+}

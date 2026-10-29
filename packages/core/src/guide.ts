@@ -50,6 +50,8 @@ export const Step = z
     doneWhen: z.string().min(1),
     /** Frame times showing the finished state of this step. */
     referenceTimesS: z.array(z.number().nonnegative()).default([]),
+    /** What to ask for when the finished state is out of view, e.g. "Turn it over to show the bottom". */
+    showMe: z.string().min(1).max(160).optional(),
     safety: z
       .object({ level: SafetyLevel, note: z.string().optional() })
       .default({ level: "none" }),

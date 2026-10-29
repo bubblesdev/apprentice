@@ -1,0 +1,33 @@
+{
+  "name": "@apprentice/pipeline",
+  "version": "0.1.0",
+  "description": "Instructions to guide: step draft, boundary refinement, reference frames and part grounding as idempotent, versioned stages.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@apprentice/core": "workspace:*",
+    "@mozilla/readability": "^0.6.0",
+    "linkedom": "~0.18.14",
+    "unpdf": "~1.4.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@apprentice/meta": "workspace:*"
+  }
+}

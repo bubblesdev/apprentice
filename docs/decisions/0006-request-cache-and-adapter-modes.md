@@ -1,0 +1,6 @@
+# 0006: Request-hash cache and adapter modes
+
+Date: 2026-10-26. Status: accepted.
+Context: the team has $150 of Meta credits. Development happens without a key; real calls happen only on James's machine for evals and the demo. A repeated eval or demo rehearsal must not pay twice for the same request.
+Decision: `packages/meta` wraps the live client in `CachedMetaApi`, which keys each Responses request by a SHA-256 of its canonical JSON body (and each upload by a hash of its bytes), records the response on first call and replays it afterwards, sharing one call between identical requests in flight. Prompts are part of the body, so a prompt change is a new key. Adapters run in one of four modes chosen by `APPRENTICE_ADAPTERS`: `live` (key required, recorded), `replay` (recordings only, a miss fails), `fake` (fixtures/ from the day-1 spikes) and `auto` (live with a key, else fake). Every call is metered against a guide, session or eval scope with an optional hard cap.
+Consequences: tests and CI never need a key or credits; recordings from a real run can be replayed in development; a stale recording is fixed by deleting its file. No other vendor's model is used as a stand-in: fakes replay recorded Meta outputs or answer "unclear".

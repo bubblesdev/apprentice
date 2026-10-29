@@ -1,0 +1,46 @@
+# Fly.io (ADR 0005). Secrets are set with `fly secrets set`, never committed:
+#   META_MODEL_API_KEY, DATABASE_URL (Neon), and R2_* if MEDIA_STORE=r2.
+app = "apprentice-api"
+primary_region = "lhr"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "8080"
+  APPRENTICE_ADAPTERS = "auto"
+  # One machine runs everything: builds inline, media and uploads on the volume.
+  BUILD_JOBS = "inline"
+  MEDIA_STORE = "file"
+  MEDIA_DIR = "/data/media"
+  UPLOAD_DIR = "/data/uploads"
+  META_CACHE_DIR = "/data/meta-cache"
+  CORS_ORIGIN = "https://apprentice.pages.dev"
+  SEED_FIXTURE_GUIDE = "false"
+  GUIDE_BUDGET_USD = "1.5"
+  SESSION_BUDGET_USD = "0.5"
+
+[processes]
+  app = "node apps/api/dist/main.js"
+  # To scale builds out: set BUILD_JOBS=queue, MEDIA_STORE=r2, and scale this group to 1.
+  worker = "node apps/worker/dist/main.js"
+
+[[mounts]]
+  source = "apprentice_data"
+  destination = "/data"
+  processes = ["app"]
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["app"]
+
+  [[http_service.checks]]
+    grace_period = "10s"
+    interval = "30s"
+    method = "GET"
+    path = "/health"
+    timeout = "5s"
