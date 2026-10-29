@@ -2,7 +2,13 @@ import { randomUUID } from "node:crypto";
 import { resolve } from "node:path";
 import { CoachPolicy, StepVerifier } from "@apprentice/coach";
 import { systemClock, type Clock, type FrameExtractor, type UsageScope } from "@apprentice/core";
-import { CostMeter, MetaEnv, createMetaAdapters } from "@apprentice/meta";
+import {
+  CostMeter,
+  DailySpendLimit,
+  MetaEnv,
+  createMetaAdapters,
+  utcDayStart,
+} from "@apprentice/meta";
 import { FakeFrameExtractor } from "@apprentice/meta/fake";
 import {
   BUILD_GUIDE_JOB,
@@ -26,6 +32,8 @@ export const ApiEnv = MetaEnv.merge(MediaEnv).extend({
   /** Hard caps on Meta spend per guide build and per coaching session. */
   GUIDE_BUDGET_USD: z.coerce.number().positive().default(1.5),
   SESSION_BUDGET_USD: z.coerce.number().positive().default(0.5),
+  /** Cap on all Meta spend per UTC day across every guide and session. Unset: no daily cap. */
+  DAILY_BUDGET_USD: z.coerce.number().positive().optional(),
   /** Uploaded and downloaded source videos. With a separate worker, both must see this directory. */
   UPLOAD_DIR: z.string().min(1).default(".data/uploads"),
   UPLOAD_MAX_MB: z.coerce.number().positive().default(300),
@@ -59,8 +67,21 @@ export async function createRuntime(env: ApiEnv, options: RuntimeOptions = {}) {
     ? await postgresPersistence(env.DATABASE_URL, [BUILD_GUIDE_JOB], env.BUILD_JOBS === "inline")
     : memoryPersistence();
   const { guides, sessions } = persistence;
+  const daily = env.DAILY_BUDGET_USD
+    ? new DailySpendLimit({
+        capUsd: env.DAILY_BUDGET_USD,
+        clock,
+        spentTodayUsd: await persistence.spentSince(utcDayStart(clock.now())),
+      })
+    : undefined;
   const meter = (scope: UsageScope, capUsd: number) =>
-    new CostMeter({ scope, capUsd, clock, onEvent: persistence.recordUsage });
+    new CostMeter({
+      scope,
+      capUsd,
+      clock,
+      onEvent: persistence.recordUsage,
+      ...(daily ? { shared: daily } : {}),
+    });
   const adapters = (m: CostMeter) =>
     createMetaAdapters({
       env,

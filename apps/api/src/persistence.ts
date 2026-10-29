@@ -28,6 +28,8 @@ export interface Persistence {
   builds: BuildStatusRepository;
   artifacts: ArtifactStore;
   recordUsage: (event: UsageEvent) => void;
+  /** Paid spend recorded at or after an ISO time, across every scope. */
+  spentSince: (at: string) => Promise<number>;
   /** In memory, jobs run inline in this process; with Postgres they go to pg-boss for apps/worker. */
   createQueue(handlers: Record<string, JobHandler>): Promise<JobQueue & { idle(): Promise<void> }>;
   close(): Promise<void>;
@@ -41,6 +43,7 @@ export function memoryPersistence(): Persistence {
     builds: new InMemoryBuildStatusRepository(),
     artifacts: new MemoryArtifactStore(),
     recordUsage: () => undefined,
+    spentSince: () => Promise.resolve(0),
     createQueue: async (handlers) => new InlineQueue(handlers),
     close: async () => undefined,
   };
@@ -67,6 +70,7 @@ export async function postgresPersistence(
     artifacts: new PgArtifactStore(pool),
     recordUsage: (event) =>
       void usage.record(event).catch((e: unknown) => console.error("usage log", e)),
+    spentSince: (at) => usage.spentSince(at),
     createQueue: async (handlers) => {
       if (inlineJobs) return new InlineQueue(handlers);
       boss = await PgBossQueue.connect(connectionString, queues);

@@ -152,6 +152,15 @@ export class PgUsageLog {
     );
     return rows.map((r) => UsageEvent.parse(r.doc));
   }
+
+  /** Total paid spend recorded at or after `at` (an ISO time), across every scope. */
+  async spentSince(at: string): Promise<number> {
+    const { rows } = await this.sql.query<{ total: string | null }>(
+      "select sum(cost_usd) as total from usage_events where at >= $1",
+      [at],
+    );
+    return Number(rows[0]?.total ?? 0);
+  }
 }
 
 export class PgBuildStatusRepository implements BuildStatusRepository {

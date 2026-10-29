@@ -104,7 +104,7 @@ export function coachView(update: CoachUpdate, steps: readonly Step[]): CoachVie
       const title = closerTitle(decision?.reason, decision?.missingParts ?? [], step?.showMe);
       const text =
         decision?.reason === "unavailable"
-          ? "The check budget for this session is used. You can confirm steps yourself."
+          ? "The check budget is used for now. You can confirm steps yourself."
           : sentence;
       return {
         ...base,

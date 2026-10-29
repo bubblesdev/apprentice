@@ -8,3 +8,12 @@ export class BudgetExceededError extends Error {
     this.name = "BudgetExceededError";
   }
 }
+
+/** The deployment's spending limit for the day is used; paid calls resume the next UTC day. */
+export class DailyLimitReachedError extends BudgetExceededError {
+  constructor(spentUsd: number, capUsd: number) {
+    super(spentUsd, capUsd);
+    this.message = `Today's spending limit of $${capUsd.toFixed(2)} is used. Try again tomorrow.`;
+    this.name = "DailyLimitReachedError";
+  }
+}

@@ -1,6 +1,7 @@
 export * from "./adapters.js";
 export * from "./cache.js";
 export * from "./client.js";
+export * from "./daily-limit.js";
 export * from "./errors.js";
 export * from "./json.js";
 export * from "./media.js";
