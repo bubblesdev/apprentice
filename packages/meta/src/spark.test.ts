@@ -90,6 +90,45 @@ describe("SparkReasoner.draftSteps", () => {
     expect(String(content[0]?.text)).toContain("1. Open the lid.");
   });
 
+  it("reads photos of manual pages, sending local files inline in page order", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "apprentice-pages-"));
+    const path = join(dir, "page-1.jpg");
+    await writeFile(path, new Uint8Array([255, 216, 255]));
+    const api = new StubMetaApi([
+      { text: '{"steps":[{"start_s":0,"end_s":0,"title":"Open","visible_check":"Grille off"}]}' },
+    ]);
+    const drafts = await new SparkReasoner({ api }).draftSteps(
+      { kind: "url", url: pathToFileURL(path).href },
+      {
+        pages: [
+          { kind: "url", url: pathToFileURL(path).href },
+          { kind: "url", url: "https://example.com/page-2.jpg" },
+        ],
+        documentText: "ignored when pages are given",
+      },
+    );
+    const content = contentOf(api.bodies[0]);
+    expect(String(content[0]?.text)).toMatch(/2 images are photos of a printed manual/);
+    expect(content[1]).toEqual({ type: "input_image", image_url: "data:image/jpeg;base64,/9j/" });
+    expect(content[2]).toEqual({
+      type: "input_image",
+      image_url: "https://example.com/page-2.jpg",
+    });
+    expect(api.uploads).toEqual([]);
+    expect(drafts.map((d) => d.title)).toEqual(["Open"]);
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  it("refuses a local page that is not an image", async () => {
+    const api = new StubMetaApi([{ text: "{}" }]);
+    await expect(
+      new SparkReasoner({ api }).draftSteps(
+        { kind: "url", url: "https://example.com/manual" },
+        { pages: [{ kind: "url", url: "file:///tmp/manual.pdf" }] },
+      ),
+    ).rejects.toBeInstanceOf(UnsupportedMediaError);
+  });
+
   it("rejects video URLs, which ingest must download first", async () => {
     const api = new StubMetaApi([{ text: "{}" }]);
     await expect(

@@ -21,6 +21,9 @@ const EXTENSIONS: Record<string, string> = {
   "text/plain": "txt",
   "text/markdown": "md",
   "application/pdf": "pdf",
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
 };
 
 export function extensionFor(mime: string): string {

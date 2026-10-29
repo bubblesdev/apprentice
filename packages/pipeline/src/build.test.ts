@@ -140,6 +140,24 @@ describe("buildGuide on the recorded PS1 job", () => {
     ]);
   });
 
+  it("drafts from photos of manual pages and skips the video-only stages", async () => {
+    const d = deps();
+    const page = { kind: "url" as const, url: "https://example.com/page-1.jpg" };
+    const { guide } = await buildGuide(
+      {
+        ...input(),
+        source: { id: "doc", kind: "document", title: "Manual", location: page.url },
+        media: page,
+        pages: [page],
+      },
+      d,
+      { store: new MemoryArtifactStore() },
+    );
+    expect(guide.steps).toHaveLength(10);
+    expect(d.reasoner.calls).toEqual(["draft_steps"]);
+    expect(d.segmenter.calls).toEqual([]);
+  });
+
   it("rejects input that fails validation", async () => {
     await expect(
       buildGuide({ ...input(), guideId: "" }, deps(), { store: new MemoryArtifactStore() }),

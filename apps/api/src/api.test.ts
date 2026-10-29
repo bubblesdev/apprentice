@@ -66,6 +66,32 @@ describe("guides", () => {
     expect((await call(rt.app, "POST", `/guides/${guideId}/approve`)).json.status).toBe("approved");
   });
 
+  it("queues a guide from photos of manual pages, and checks every page's location", async () => {
+    const rt = await runtime({ SEED_FIXTURE_GUIDE: "false" });
+    const page = { kind: "url", url: "https://example.com/page-1.jpg" };
+    const manual = { kind: "document", title: "Desk fan manual", location: page.url };
+    const ok = await call(rt.app, "POST", "/guides", {
+      source: manual,
+      media: page,
+      pages: [page],
+    });
+    expect(ok.status).toBe(202);
+    const outside = { kind: "url", url: "file:///etc/hosts" };
+    expect(
+      (await call(rt.app, "POST", "/guides", { source: manual, media: page, pages: [outside] }))
+        .status,
+    ).toBe(400);
+    expect(
+      (
+        await call(rt.app, "POST", "/guides", {
+          source: { ...manual, kind: "video" },
+          media: page,
+          pages: [page],
+        })
+      ).status,
+    ).toBe(400);
+  });
+
   it("rejects an invalid body with 400 and the zod issues", async () => {
     const { app } = await runtime();
     const res = await call(app, "POST", "/guides", { source: { kind: "fax" } });

@@ -64,14 +64,16 @@ export interface DocumentOptions {
 
 /**
  * For document sources without text yet (an uploaded PDF, or a link to a help page, PDF or text
- * file), extracts the text the steps are drafted from. Other payloads pass through unchanged.
+ * file), extracts the text the steps are drafted from. Photos of manual pages are read by the
+ * model itself. Other payloads pass through unchanged.
  */
 export async function ingestDocument(
   payload: BuildGuidePayload,
   opts: DocumentOptions = {},
 ): Promise<BuildGuidePayload> {
   const { media, source } = payload;
-  if (source.kind !== "document" || payload.documentText || media.kind !== "url") return payload;
+  if (source.kind !== "document" || payload.documentText || payload.pages || media.kind !== "url")
+    return payload;
 
   let text: string;
   if (media.url.startsWith("file:")) {

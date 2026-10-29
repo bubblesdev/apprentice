@@ -61,6 +61,25 @@ export async function videoPart(media: Media, files?: FilesApi): Promise<Content
   }
 }
 
+const IMAGE_TYPES: Record<string, string> = {
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  png: "image/png",
+  webp: "image/webp",
+};
+
+/**
+ * Like imagePart, but a local `file:` image (an uploaded photo) is read and sent inline, since
+ * the model cannot open files on this server.
+ */
+export async function imagePartFrom(media: Media): Promise<ContentPart> {
+  if (media.kind !== "url" || !media.url.startsWith("file:")) return imagePart(media);
+  const path = fileURLToPath(media.url);
+  const mime = media.mime ?? IMAGE_TYPES[path.split(".").pop()?.toLowerCase() ?? ""];
+  if (!mime?.startsWith("image/")) throw new UnsupportedMediaError(`Not an image: ${path}`);
+  return imagePart({ kind: "bytes", mime, data: new Uint8Array(await readFile(path)) });
+}
+
 /** A single user turn, the only shape the adapters send. */
 export function userTurn(content: ContentPart[]): Record<string, unknown>[] {
   return [{ role: "user", content }];

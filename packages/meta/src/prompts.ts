@@ -28,6 +28,18 @@ export function draftFromDocumentPrompt(documentText: string): string {
   );
 }
 
+/** Photos of a printed manual's pages, in reading order. */
+export function draftFromPagesPrompt(pageCount: number): string {
+  return (
+    `The ${pageCount === 1 ? "image is a photo" : `${pageCount} images are photos`} of a ` +
+    "printed manual, in page order. Read the instructions on them, including what the pictures " +
+    "show, and turn them into the ordered steps a beginner must follow. Ignore covers, " +
+    "warranty text and other languages. " +
+    `${STEP_FIELDS} The source is pages, so set start_s and end_s to 0. ` +
+    'Reply with JSON only: {"steps":[...]}'
+  );
+}
+
 /**
  * The strict-instructor judge from spike/step_check.py. Two verdicts were added for the live
  * coach: `unclear` (ask the trainee to show the part closer) and `unsafe` (stop them).

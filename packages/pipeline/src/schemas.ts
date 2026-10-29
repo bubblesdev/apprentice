@@ -36,5 +36,7 @@ export const PipelineInput = z.object({
   frameSource: MediaRef.optional(),
   /** Extracted text for document sources; when present, steps are drafted from text. */
   documentText: z.string().optional(),
+  /** Photos of printed manual pages; when present, steps are drafted from them. */
+  pages: z.array(MediaRef).min(1).optional(),
 });
 export type PipelineInput = z.infer<typeof PipelineInput>;
