@@ -66,3 +66,7 @@ Correction first: the set has 26 cases, not 30 (12 real, 8 edited mistakes, 6 co
 - The rule is kept: it fixed one miss, it made no new false passes, and the two new unclear answers are safe. A guessed orientation cue for the air fryer plate was tried and reverted, because the plate's real underside has not been seen.
 
 Cost: $0.21.
+
+## Upside-down plate, second attempt
+
+Muse Image was given the in-basket frame (21 s) and a frame showing the plate's other side (17 s), and asked to flip the real plate. The result is not usable: the hand still covers the plate and the visible part is a vague shape, not the plate flipped. It was not judged. The underlying limit: in James's clip the hand covers the plate in every frame where it sits in the basket, so the guide has no reference that shows which side is up. A fair orientation test needs footage where the part's facing side is visible when fitted. Cost: $0.02.
