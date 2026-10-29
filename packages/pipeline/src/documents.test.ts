@@ -116,6 +116,10 @@ describe("ingestDocument", () => {
   it("leaves pasted documents and videos alone", async () => {
     const pasted = doc("data:text/markdown;base64,eA==", { documentText: "1. Do it." });
     expect(await ingestDocument(pasted)).toBe(pasted);
+    const page = { kind: "url" as const, url: "https://x.example/page-1.jpg" };
+    const photos = { ...doc(page.url), pages: [page] };
+    const fetchPage = respond("not fetched", "text/html");
+    expect(await ingestDocument(photos, { fetch: fetchPage, resolve: publicDns })).toBe(photos);
     const video = {
       ...doc("https://x.example/v.mp4"),
       source: { id: "s", kind: "video" as const, title: "v", location: "x" },

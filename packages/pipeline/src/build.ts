@@ -65,13 +65,15 @@ export async function buildGuide(
   const { store } = options;
   const report = options.onProgress ?? (() => undefined);
   const artifacts: BuildResult["artifacts"] = {};
-  const isVideo = input.source.kind !== "document" && !input.documentText;
+  const isVideo = input.source.kind !== "document" && !input.documentText && !input.pages;
   const frameSource = input.frameSource ?? input.media;
 
   report({ stage: "draft_steps", state: "running" });
-  const draftInput = input.documentText
-    ? { media: input.media, documentText: input.documentText }
-    : { media: input.media };
+  const draftInput = {
+    media: input.media,
+    ...(input.documentText ? { documentText: input.documentText } : {}),
+    ...(input.pages ? { pages: input.pages } : {}),
+  };
   const drafted = await runStage(draftStage, draftInput, deps, store);
   artifacts.draft_steps = drafted.key;
   report({

@@ -46,7 +46,15 @@ export interface AppDeps {
 
 const STATUS = { not_found: 404, not_ready: 409, invalid_event: 409, unheard: 422 } as const;
 
-const UPLOAD_TYPES = new Set(["video/mp4", "video/quicktime", "video/webm", "application/pdf"]);
+const UPLOAD_TYPES = new Set([
+  "video/mp4",
+  "video/quicktime",
+  "video/webm",
+  "application/pdf",
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+]);
 
 /**
  * Media a client may point a build at. Local files are allowed only inside the uploads directory,
@@ -129,7 +137,7 @@ export function createApp(deps: AppDeps, app: Hono = new Hono()): Hono {
   app.post("/uploads", async (c) => {
     const mime = (c.req.header("content-type") ?? "").split(";")[0]?.trim() ?? "";
     if (!UPLOAD_TYPES.has(mime))
-      return c.json({ error: "Upload an MP4, MOV or WebM video, or a PDF" }, 415);
+      return c.json({ error: "Upload an MP4, MOV or WebM video, a PDF, or a photo" }, 415);
     const stream = c.req.raw.body;
     if (!stream) return c.json({ error: "The file is empty" }, 400);
     try {
@@ -164,7 +172,11 @@ export function createApp(deps: AppDeps, app: Hono = new Hono()): Hono {
   app.post("/guides", async (c) => {
     const req = await body(c, CreateGuideRequest);
     if (req instanceof Response) return req;
-    const urls = [req.media, req.frameSource].flatMap((m) => (m?.kind === "url" ? [m.url] : []));
+    if (req.pages && req.source.kind !== "document")
+      return c.json({ error: "Manual pages need a document source" }, 400);
+    const urls = [req.media, req.frameSource, ...(req.pages ?? [])].flatMap((m) =>
+      m?.kind === "url" ? [m.url] : [],
+    );
     if (req.source.location.includes(":")) urls.push(req.source.location);
     if (urls.some((u) => !allowedMediaUrl(u, deps.uploads.dir))) {
       return c.json({ error: "That media location is not allowed" }, 400);
@@ -185,6 +197,7 @@ export function createApp(deps: AppDeps, app: Hono = new Hono()): Hono {
       media: req.media,
       ...(req.frameSource ? { frameSource: req.frameSource } : {}),
       ...(req.documentText ? { documentText: req.documentText } : {}),
+      ...(req.pages ? { pages: req.pages } : {}),
     };
     const jobId = await deps.queue.enqueue(BUILD_GUIDE_JOB, payload);
     return c.json({ guideId, jobId }, 202);

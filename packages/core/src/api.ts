@@ -7,6 +7,9 @@ import { Session, Verdict } from "./session.js";
  * malformed message is rejected at the boundary instead of travelling into the domain.
  */
 
+/** Most photos of manual pages one guide can be built from. */
+export const MAX_MANUAL_PAGES = 12;
+
 export const MediaRefBody = z.discriminatedUnion("kind", [
   z.object({
     kind: z.literal("provider_file"),
@@ -28,6 +31,8 @@ export const CreateGuideRequest = z.object({
   /** Local path or URL the worker can read frames from, when it differs from `media`. */
   frameSource: MediaRefBody.optional(),
   documentText: z.string().max(200_000).optional(),
+  /** Photos of printed manual pages, in reading order (document sources only). */
+  pages: z.array(MediaRefBody).min(1).max(MAX_MANUAL_PAGES).optional(),
 });
 export type CreateGuideRequest = z.infer<typeof CreateGuideRequest>;
 

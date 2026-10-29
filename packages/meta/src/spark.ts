@@ -11,11 +11,19 @@ import { z } from "zod";
 import type { FilesApi, ResponseResult, ResponsesApi } from "./client.js";
 import { ModelOutputError } from "./errors.js";
 import { parseModelJson } from "./json.js";
-import { imagePart, textPart, userTurn, videoPart, type ContentPart } from "./media.js";
+import {
+  imagePart,
+  imagePartFrom,
+  textPart,
+  userTurn,
+  videoPart,
+  type ContentPart,
+} from "./media.js";
 import type { CostMeter } from "./meter.js";
 import {
   DRAFT_FROM_VIDEO_PROMPT,
   draftFromDocumentPrompt,
+  draftFromPagesPrompt,
   answerPrompt,
   judgeStepPrompt,
   refineBoundaryPrompt,
@@ -70,10 +78,18 @@ export class SparkReasoner implements VisionReasoner {
     return result;
   }
 
-  async draftSteps(source: Media, opts: { documentText?: string } = {}): Promise<StepDraft[]> {
-    const content = opts.documentText
-      ? [textPart(draftFromDocumentPrompt(opts.documentText))]
-      : [textPart(DRAFT_FROM_VIDEO_PROMPT), await videoPart(source, this.options.files)];
+  async draftSteps(
+    source: Media,
+    opts: { documentText?: string; pages?: Media[] } = {},
+  ): Promise<StepDraft[]> {
+    const content = opts.pages?.length
+      ? [
+          textPart(draftFromPagesPrompt(opts.pages.length)),
+          ...(await Promise.all(opts.pages.map(imagePartFrom))),
+        ]
+      : opts.documentText
+        ? [textPart(draftFromDocumentPrompt(opts.documentText))]
+        : [textPart(DRAFT_FROM_VIDEO_PROMPT), await videoPart(source, this.options.files)];
     const { text } = await this.call("draft_steps", content);
     return toStepDrafts(parseModelJson(text, SparkStepsOutput).steps);
   }

@@ -45,3 +45,20 @@ export function utf8Base64(text: string): string {
   for (const b of bytes) binary += String.fromCharCode(b);
   return btoa(binary);
 }
+
+/**
+ * A photo re-encoded as a JPEG no larger than `maxSide` on its long edge, so phone photos (HEIC
+ * or 12 MP JPEG) upload quickly and in a format the model reads.
+ */
+export async function photoAsJpeg(file: File, maxSide = 2000): Promise<File> {
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(bitmap.width * scale);
+  canvas.height = Math.round(bitmap.height * scale);
+  canvas.getContext("2d")?.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close();
+  const blob = await new Promise<Blob | null>((done) => canvas.toBlob(done, "image/jpeg", 0.85));
+  if (!blob) throw new Error("That photo could not be read");
+  return new File([blob], file.name.replace(/\.[^.]+$/, "") + ".jpg", { type: "image/jpeg" });
+}

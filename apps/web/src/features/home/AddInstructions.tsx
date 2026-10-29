@@ -5,13 +5,14 @@ import { Icon } from "../../components/Icon";
 import { Sheet } from "../../components/Sheet";
 import { api } from "../../lib/api";
 import { cx } from "../../lib/cx";
-import { utf8Base64, videoDuration } from "../../lib/device";
+import { photoAsJpeg, utf8Base64, videoDuration } from "../../lib/device";
 import styles from "./Home.module.css";
 
 export type SourceChoice = "video" | "link" | "manual";
 
 const VIDEO_TYPES = "video/mp4,video/quicktime,video/webm";
 const MAX_DOCUMENT_CHARS = 200_000;
+const MAX_PAGES = 12;
 
 const titleFromFile = (name: string) =>
   name
@@ -181,10 +182,11 @@ function LinkForm() {
   );
 }
 
-type ManualMode = "paste" | "file" | "link";
+type ManualMode = "paste" | "photos" | "file" | "link";
 
 const MODES: { mode: ManualMode; label: string }[] = [
   { mode: "paste", label: "Paste" },
+  { mode: "photos", label: "Photos" },
   { mode: "file", label: "File" },
   { mode: "link", label: "Web page" },
 ];
@@ -200,6 +202,7 @@ function ManualForm({
   const [text, setText] = useState(initialText ?? "");
   const [file, setFile] = useState<File | undefined>(initialFile);
   const [url, setUrl] = useState("");
+  const [pages, setPages] = useState<File[]>([]);
   const [title, setTitle] = useState(initialFile ? titleFromFile(initialFile.name) : "");
   const { busy, error, run } = useCreate();
   const isPdf = file?.type === "application/pdf" || /\.pdf$/i.test(file?.name ?? "");
@@ -209,9 +212,11 @@ function ManualForm({
   const ready =
     mode === "paste"
       ? Boolean(trimmed) && !tooLong
-      : mode === "file"
-        ? Boolean(file) && (isPdf || (Boolean(trimmed) && !tooLong))
-        : linkValid;
+      : mode === "photos"
+        ? pages.length > 0 && pages.length <= MAX_PAGES
+        : mode === "file"
+          ? Boolean(file) && (isPdf || (Boolean(trimmed) && !tooLong))
+          : linkValid;
 
   const chooseFile = async (f: File | undefined) => {
     setFile(f);
@@ -231,6 +236,23 @@ function ManualForm({
           await api.createGuide({
             source: { kind: "document", title: name, location: link },
             media: { kind: "url", url: link },
+          })
+        ).guideId;
+      }
+      if (mode === "photos") {
+        const uploaded = [];
+        for (const page of pages) uploaded.push((await api.upload(await photoAsJpeg(page))).media);
+        const [first] = uploaded;
+        if (!first) throw new Error("Add a photo of each page");
+        return (
+          await api.createGuide({
+            source: {
+              kind: "document",
+              title: title.trim() || "Printed manual",
+              location: first.kind === "url" ? first.url : "photos",
+            },
+            media: first,
+            pages: uploaded,
           })
         ).guideId;
       }
@@ -283,6 +305,23 @@ function ManualForm({
             placeholder="1. Unplug the console. 2. Remove the six screws..."
           />
         </Field>
+      ) : null}
+      {mode === "photos" ? (
+        <label className={styles.file}>
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={(e) => setPages(Array.from(e.target.files ?? []))}
+          />
+          <Icon name="document" />
+          {pages.length === 0
+            ? "Take or choose a photo of each page"
+            : `${pages.length} ${pages.length === 1 ? "page" : "pages"}, in the order chosen`}
+        </label>
+      ) : null}
+      {mode === "photos" && pages.length > MAX_PAGES ? (
+        <p className={styles.error}>Choose up to {MAX_PAGES} pages.</p>
       ) : null}
       {mode === "file" ? (
         <label className={styles.file}>

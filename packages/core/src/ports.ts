@@ -47,7 +47,11 @@ export interface BoundaryEstimate {
 
 /** Reads and watches instructions; judges a live step against the expert's reference. */
 export interface VisionReasoner {
-  draftSteps(source: Media, opts?: { documentText?: string }): Promise<StepDraft[]>;
+  /** `pages` are photos of a printed manual, read in order; they take priority over `source`. */
+  draftSteps(
+    source: Media,
+    opts?: { documentText?: string; pages?: Media[] },
+  ): Promise<StepDraft[]>;
   /** Picks the frame where `step` is finished, from dense frames around its drafted end. */
   refineBoundary(input: {
     step: StepBrief;
