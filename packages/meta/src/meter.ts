@@ -5,6 +5,7 @@ import {
   type UsageEvent,
   type UsageScope,
 } from "@apprentice/core";
+import type { SpendLimit } from "./daily-limit.js";
 import { BudgetExceededError } from "./errors.js";
 import { usageCost } from "./pricing.js";
 
@@ -15,6 +16,8 @@ export interface CostMeterOptions {
   clock?: Clock;
   /** Called with every event, e.g. to persist `usage_events`. */
   onEvent?: (event: UsageEvent) => void;
+  /** A limit shared with other meters, checked before and charged after every paid call. */
+  shared?: SpendLimit;
 }
 
 /**
@@ -52,6 +55,7 @@ export class CostMeter {
   assertWithinBudget(): void {
     const cap = this.options.capUsd;
     if (cap !== undefined && this.spent >= cap) throw new BudgetExceededError(this.spent, cap);
+    this.options.shared?.assertWithinBudget();
   }
 
   record(operation: string, usage: Usage, cached: boolean): UsageEvent {
@@ -65,6 +69,7 @@ export class CostMeter {
       at: this.clock.now().toISOString(),
     };
     this.spent += costUsd;
+    this.options.shared?.add(costUsd);
     this.recorded.push(event);
     this.options.onEvent?.(event);
     return event;

@@ -222,10 +222,7 @@ export class CoachService {
       return (await transcriber.transcribe(audio)).text;
     } catch (error) {
       if (error instanceof BudgetExceededError)
-        throw new CoachError(
-          "unheard",
-          "Voice questions are paused: this session's budget is used.",
-        );
+        throw new CoachError("unheard", "Voice questions are paused: the budget is used for now.");
       throw new CoachError(
         "unheard",
         "I couldn't understand that recording. Try again, or type it.",

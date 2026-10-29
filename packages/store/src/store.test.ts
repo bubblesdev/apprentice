@@ -95,6 +95,8 @@ describe.runIf(url)("Postgres store", () => {
     };
     await log.record(event);
     expect(await log.list({ kind: "guide", id: "g1" })).toEqual([event]);
+    expect(await log.spentSince("2026-10-27T00:00:00.000Z")).toBeCloseTo(0.01);
+    expect(await log.spentSince("2026-10-28T00:00:00.000Z")).toBe(0);
   });
 
   it("delivers a queued job to a worker through pg-boss", async () => {
