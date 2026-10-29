@@ -1,11 +1,14 @@
 # One image for the API and the worker. Fly runs both from it as process groups (fly.toml).
 FROM node:22-slim AS build
+# pnpm refuses to replace node_modules without a terminal unless CI is set.
+ENV CI=true
 RUN corepack enable
 WORKDIR /app
 COPY . .
 RUN pnpm install --frozen-lockfile \
   && pnpm turbo run build --filter=@apprentice/api... --filter=@apprentice/worker... \
-  && pnpm prune --prod --config.ignore-scripts=true
+  && rm -rf node_modules apps/*/node_modules packages/*/node_modules \
+  && pnpm install --prod --frozen-lockfile --ignore-scripts
 
 FROM node:22-slim
 # ffmpeg extracts reference frames from source videos.
