@@ -8,7 +8,9 @@ import type { StepBrief } from "@apprentice/core";
 const STEP_FIELDS =
   "For each step return start_s, end_s, title, instruction (one imperative sentence for a " +
   "beginner), parts_and_tools (short noun phrases), visible_check (what must be visible when " +
-  "the step is done correctly), warning (empty if none), safety (none, caution, or stop when " +
+  "the step is done correctly; when a part can be fitted the wrong way round, say which side " +
+  'faces where and the cue that shows it, such as "feet down, holes facing up"), warning ' +
+  "(empty if none), safety (none, caution, or stop when " +
   "the step involves mains electricity, gas, blades, heat or pressure) and check_view (empty " +
   "unless the finished state can only be seen from another side: then a short request such as " +
   '"Turn it over so I can see the bottom").';
@@ -49,7 +51,11 @@ export function judgeStepPrompt(
     "not_yet. Say unclear only when the part that decides the step is hidden, blurred or out " +
     "of frame. Parts are judged by kind, position and orientation, not by brand or model: a part " +
     "of the same kind from another maker is fine. Say wrong only for the wrong kind of part, " +
-    "the wrong place or the wrong way round. If you see an immediate danger (live " +
+    "the wrong place or the wrong way round. When the step's finished state depends on which " +
+    "way a part faces (up or down, front or back, which end first), find the cue that shows " +
+    "it (feet, holes, a label, a notch, a cable side) on the trainee's part before saying " +
+    "done: if it faces the other way, say wrong; if the cue is hidden, say unclear. Lying " +
+    "flat in the right place is not enough. If you see an immediate danger (live " +
     "mains wiring, a hand in the path of a blade, a powered appliance being opened), say " +
     'unsafe. JSON only: {"verdict":"done|skipped|not_yet|wrong|unclear|unsafe",' +
     '"confidence":0-1,"evidence":"one sentence naming what you saw"}'

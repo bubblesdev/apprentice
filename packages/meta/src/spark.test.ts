@@ -146,6 +146,7 @@ describe("SparkReasoner.judgeStep", () => {
     expect(String(content[0]?.text)).toMatch(
       /strict workshop instructor[\s\S]*first 3 images[\s\S]*last 1 images/,
     );
+    expect(String(content[0]?.text)).toMatch(/which way a part faces[\s\S]*not enough/);
     expect(content[1]).toEqual({ type: "input_image", image_url: "data:image/jpeg;base64,/9j/" });
     expect(content[3]).toEqual({ type: "input_image", image_url: "https://cdn/ref.jpg" });
     expect(api.bodies[0]?.model).toBe("muse-spark-1.3");

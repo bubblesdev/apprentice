@@ -13,7 +13,7 @@ James asked for no more home recordings, so this uses downloaded videos only. Mi
   - HP 440 trainee: battery put back.
 - **Settings:** `passConfidence` 0.8, the judge with the brand rule (commit 130a272).
 
-## Results (30 cases)
+## Results (26 cases)
 
 | Group                  | Cases | Agree | Missed                                                    |
 | ---------------------- | ----- | ----- | --------------------------------------------------------- |
@@ -40,9 +40,29 @@ James asked for no more home recordings, so this uses downloaded videos only. Mi
 
 ## Next
 
-- One change for orientation: when a step's finished state depends on which way a part faces, the guide stores what the right side looks like ("feet down, holes up"), and the judge must confirm it or say unclear. Re-run these 30 cases for a before and after.
+- One change for orientation: when a step's finished state depends on which way a part faces, the guide stores what the right side looks like ("feet down, holes up"), and the judge must confirm it or say unclear. Re-run these 26 cases for a before and after.
 - More edited mistakes on orientation and wrong parts, to measure the change on more than one case.
 
 ## Cost
 
-About $0.77: the HP guide about $0.40, 16 Muse Image edits $0.16, 30 checks $0.21. Every call is cached in `.cache/meta`.
+About $0.77: the HP guide about $0.40, 16 Muse Image edits $0.16, 26 checks $0.21. Every call is cached in `.cache/meta`.
+
+## Orientation rule, re-run (same day)
+
+Correction first: the set has 26 cases, not 30 (12 real, 8 edited mistakes, 6 controls).
+
+**Change:** the judge must find the cue that shows which way a part faces before saying done, and say wrong if it faces the other way or unclear if the cue is hidden; lying flat in the right place is not enough. The draft prompt now asks `visible_check` to name that cue for parts that can go in the wrong way round.
+
+| Gate at 0.8                 | Before | After |
+| --------------------------- | ------ | ----- |
+| Real cross-video agree (12) | 11     | 11    |
+| Edited mistakes caught (8)  | 6      | 6     |
+| Controls passed (6)         | 5      | 5     |
+| False passes                | 2      | 2     |
+
+- `hp-ram-open` is now recognised as done (0.85). `hp-bat-in` moved from not_yet to unclear, which still stops the trainee. `af-ctrl-4` moved from done at 0.75 to unclear: the hand really does hide the plate there.
+- **`af-upside` is not a valid test.** Muse Image did not flip James's plate: it drew a different one (square grid with posts; the real plate is round with a radial pattern). The judge saw a plate lying flat and could not know its orientation. **`d-bat-back`** is also a weak edit (above). Leaving both out, there are no false passes before or after.
+- **So orientation is still untested.** Edits that redraw a part can't produce a fair wrong-way-round case. That needs real footage of a part fitted the wrong way.
+- The rule is kept: it fixed one miss, it made no new false passes, and the two new unclear answers are safe. A guessed orientation cue for the air fryer plate was tried and reverted, because the plate's real underside has not been seen.
+
+Cost: $0.21.
