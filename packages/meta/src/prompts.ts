@@ -153,8 +153,10 @@ export function runAuditPrompt(input: {
     `Run report (verdicts, caught mistakes, closer requests, unverified steps): ${JSON.stringify(input.report)}.\n` +
     "Write: summary (two plain sentences on how the job went), concerns (steps a supervisor should " +
     "check: unverified steps, mistakes caught late, anything unsafe), and suggestions (how to reword " +
-    "a step so the next trainee gets it right, only where the run shows trouble). Use 0-based step " +
-    'indexes. JSON only: {"summary":"...","concerns":[{"stepIndex":0,"note":"..."}],' +
+    "a step so the next trainee gets it right, only where the run shows trouble). Steps the trainee " +
+    "never reached are not failures: say they were not reached. In the summary and notes, name " +
+    "steps by number starting at 1; stepIndex fields are 0-based (stepIndex 0 is step 1). " +
+    'JSON only: {"summary":"...","concerns":[{"stepIndex":0,"note":"..."}],' +
     '"suggestions":[{"stepIndex":0,"suggestion":"..."}]}'
   );
 }
