@@ -1,0 +1,23 @@
+{
+  "name": "@apprentice/ui",
+  "version": "0.1.0",
+  "description": "Apprentice design tokens: colour, type, space, radius and motion, platform neutral for web and native shells.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  }
+}

@@ -11,3 +11,8 @@ spike/out/
 __pycache__/
 .DS_Store
 *.log
+.cache/
+.data/
+dev-dist/
+test-results/
+playwright-report/

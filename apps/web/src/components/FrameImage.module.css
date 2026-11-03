@@ -1,0 +1,42 @@
+.frame {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-surface-raised);
+}
+
+.frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(157, 184, 255, 0.55);
+  background:
+    radial-gradient(circle at 30% 20%, rgba(157, 184, 255, 0.08), transparent 60%),
+    var(--color-surface-raised);
+}
+
+.box {
+  position: absolute;
+  border: 2px solid var(--color-accent);
+  border-radius: 12px;
+  box-shadow: 0 0 0 9999px rgba(10, 11, 13, 0.35);
+  pointer-events: none;
+}
+
+.tag {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  padding: 3px 8px;
+  border-radius: 8px;
+  background: rgba(10, 11, 13, 0.8);
+  color: var(--color-text);
+  font-size: 11px;
+}

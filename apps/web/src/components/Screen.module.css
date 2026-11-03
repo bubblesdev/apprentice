@@ -1,0 +1,40 @@
+.screen {
+  min-height: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: max(env(safe-area-inset-top), 20px) 24px max(env(safe-area-inset-bottom), 32px);
+  padding-top: calc(max(env(safe-area-inset-top), 20px) + 28px);
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: var(--touch-min);
+}
+
+.barTitle {
+  font-size: var(--type-small-size);
+  color: var(--color-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.footer {
+  position: sticky;
+  bottom: 0;
+  margin: auto -24px 0;
+  padding: 20px 24px max(env(safe-area-inset-bottom), 24px);
+  background: linear-gradient(rgba(10, 11, 13, 0), var(--color-bg) 40%);
+}
+
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+}
