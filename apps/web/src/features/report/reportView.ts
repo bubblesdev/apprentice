@@ -22,18 +22,21 @@ export function caughtLabel(kind: Verdict["kind"]): string {
 export function summarise(report: RunReport): ReportSummary {
   const { passed, unverified, total, caught, complete } = report;
   const allVerified = complete && passed === total;
+  const allFinished = complete && passed + unverified === total;
   const headline = allVerified
     ? "Job done right"
-    : complete
-      ? `${passed} of ${total} steps verified`
-      : "Run in progress";
+    : allFinished
+      ? "Job done"
+      : complete
+        ? `${passed} of ${total} steps verified`
+        : "Run in progress";
   const parts = [
     allVerified
       ? "Every step verified on camera."
       : `${plural(passed, "step")} verified on camera.`,
     unverified ? `${plural(unverified, "step")} confirmed by you.` : "",
     caught
-      ? `${plural(caught, "mistake")} caught${allVerified ? " and fixed" : ""}.`
+      ? `${plural(caught, "mistake")} caught${allFinished ? " and fixed" : ""}.`
       : "No mistakes caught.",
   ];
   const step = report.steps.find((s) => s.caught.length > 0);

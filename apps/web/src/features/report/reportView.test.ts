@@ -45,6 +45,14 @@ describe("summarise", () => {
     expect(s.featured).toMatchObject({ fixed: true, step: { index: 1 } });
   });
 
+  it("calls a finished job done when the trainee confirmed a step themselves", () => {
+    const s = summarise(report(["passed", "unverified", "passed"], 1));
+    expect(s.headline).toBe("Job done");
+    expect(s.sentence).toBe(
+      "2 steps verified on camera. 1 step confirmed by you. 1 mistake caught and fixed.",
+    );
+  });
+
   it("is plain about partial and unverified runs", () => {
     const s = summarise(report(["passed", "unverified", "failed"]));
     expect(s.headline).toBe("1 of 3 steps verified");
