@@ -4,6 +4,7 @@
 
 - **Web:** https://apprentice-xi.vercel.app (Vercel, James's personal team). Built locally with `VITE_API_URL` set to the API, then the `apps/web/dist` folder is deployed with a `vercel.json` that sends every route to `index.html`.
 - **API:** https://api-production-3acf.up.railway.app (Railway project `apprentice`, service `api`, built from the `Dockerfile` with `railway up`). Railway Postgres holds guides and sessions; the volume at `/data` holds media, uploads and the Meta response cache. `RAILWAY_RUN_UID=0` lets the app write to the volume. The other variables match `fly.toml`'s `[env]`, plus `CORS_ORIGIN` set to the web address and `JUDGE_REASONING_EFFORT=low`.
+- Deploying the web app: link the folder with `vercel link --project apprentice` first, keep a `vercel.json` that rewrites routes to `index.html` next to the build, and build with `turbo run build --force` so `VITE_API_URL` is not skipped by the cache. Confirm a new string in the live bundle afterwards.
 - `META_MODEL_API_KEY` is piped from the local `.env` with `railway variable set META_MODEL_API_KEY --stdin`, so it is never printed. `DAILY_BUDGET_USD=2` caps all Meta spend per UTC day across every guide and session; at the cap, builds stop and the coach asks the trainee to confirm steps themselves. Both services have app sleeping on: they stop after about 10 minutes without traffic and the first request wakes them (a few seconds' delay).
 
 The Fly.io and Cloudflare Pages setup below is the original plan and still works.
